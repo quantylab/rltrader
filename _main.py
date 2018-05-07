@@ -65,22 +65,10 @@ def train(stock_code, data):
         max_trading_unit = 1
         delayed_reward_threshold = .05
         model_path = os.path.join(settings.BASE_DIR, 'models/035420/model_20180318143434.h5')
-    if stock_code == '015760':  # 한국전력
-        min_trading_unit = 10
-        max_trading_unit = 10
-        model_path = os.path.join(settings.BASE_DIR, 'models/015760/model_20180318032850.h5')
     if stock_code == '030200':  # KT
         min_trading_unit = 20
         max_trading_unit = 20
         model_path = os.path.join(settings.BASE_DIR, 'models/030200/model_20180318001555.h5')
-    if stock_code == '035250':  # 강원랜드
-        min_trading_unit = 30
-        max_trading_unit = 30
-        model_path = os.path.join(settings.BASE_DIR, 'models/035250/model_20180318043300.h5')
-    if stock_code == '009240':  # 한샘 x
-        min_trading_unit = 5
-        max_trading_unit = 5
-        model_path = os.path.join(settings.BASE_DIR, 'models/009240/model_20180318035122.h5')
 
     # 학습
     # policy_learner = PolicyLearner(
