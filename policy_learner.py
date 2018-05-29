@@ -182,6 +182,7 @@ class PolicyLearner:
             # 에포크 관련 정보 로그 기록
             if pos_learning_cnt + neg_learning_cnt > 0:
                 loss /= pos_learning_cnt + neg_learning_cnt
+            locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
             logger.info("[Epoch %s/%s]\tEpsilon:%.4f\t#Expl.:%d/%d\t"
                         "#Buy:%d\t#Sell:%d\t#Hold:%d\t"
                         "#Stocks:%d\tPV:%s\t"
