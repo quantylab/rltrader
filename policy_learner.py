@@ -12,7 +12,7 @@ from visualizer import Visualizer
 
 
 logger = logging.getLogger(__name__)
-
+locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
 
 class PolicyLearner:
 
@@ -106,7 +106,6 @@ class PolicyLearner:
                 epsilon = start_epsilon * (1. - float(epoch) / (num_epoches - 1))
             else:
                 epsilon = 0
-            epsilon = 1
 
             while True:
                 # 샘플 생성
