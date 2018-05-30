@@ -1,6 +1,5 @@
 import logging
 import os
-import os.path
 import settings
 import data_manager
 from policy_learner import PolicyLearner
@@ -12,8 +11,6 @@ if __name__ == '__main__':
     # 로그 기록
     log_dir = os.path.join(settings.BASE_DIR, 'logs/%s' % stock_code)
     timestr = settings.get_time_str()
-    if not os.path.exists('logs'):
-        os.makedirs('logs')
     if not os.path.exists('logs/%s' % stock_code):
         os.makedirs('logs/%s' % stock_code)
     file_handler = logging.FileHandler(filename=os.path.join(
