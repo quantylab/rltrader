@@ -146,6 +146,7 @@ class PolicyLearner:
                 # 학습 모드이고 지연 보상이 존재할 경우 정책 신경망 갱신
                 if delayed_reward == 0 and batch_size >= max_memory:
                     delayed_reward = immediate_reward
+                    self.agent.base_portfolio_value = self.agent.portfolio_value
                 if learning and delayed_reward != 0:
                     # 배치 학습 데이터 크기
                     batch_size = min(batch_size, max_memory)
