@@ -76,7 +76,7 @@ class Agent:
             exploration = False
             probs = policy_network.predict(sample)  # 각 행동에 대한 확률
             action = np.argmax(probs)
-            confidence = 1 + probs[action]
+            confidence = probs[action]
         return action, confidence, exploration
 
     def validate_action(self, action):
