@@ -14,7 +14,7 @@
 - 강화학습 기반의 주식투자 시스템을 커스터마이징하는 법
 
 ## 링크
-- [Quantylab](https://quantylab.github.io/deep_learning_trading.html)
+- [Quantylab](http://blog.quantylab.com/deep_learning_trading.html)
 - [위키북스](http://wikibook.co.kr/deep-learning-trading/)
 - [Yes24](http://www.yes24.com/24/goods/60890714?scode=032&OzSrank=1)
 - [교보문고](http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9791158391065)
