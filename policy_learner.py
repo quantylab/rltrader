@@ -9,7 +9,6 @@ from policy_network import PolicyNetwork
 from visualizer import Visualizer
 
 
-logger = logging.getLogger(__name__)
 locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
 
 
@@ -42,7 +41,7 @@ class PolicyLearner:
     def fit(
         self, num_epoches=1000, max_memory=60, balance=10000000,
         discount_factor=0, start_epsilon=.5, learning=True):
-        logger.info("LR: {lr}, DF: {discount_factor}, "
+        logging.info("LR: {lr}, DF: {discount_factor}, "
                     "TU: [{min_trading_unit}, {max_trading_unit}], "
                     "DRT: {delayed_reward_threshold}".format(
             lr=self.policy_network.lr,
@@ -181,7 +180,7 @@ class PolicyLearner:
             # 에포크 관련 정보 로그 기록
             if pos_learning_cnt + neg_learning_cnt > 0:
                 loss /= pos_learning_cnt + neg_learning_cnt
-            logger.info("[Epoch %s/%s]\tEpsilon:%.4f\t#Expl.:%d/%d\t"
+            logging.info("[Epoch %s/%s]\tEpsilon:%.4f\t#Expl.:%d/%d\t"
                         "#Buy:%d\t#Sell:%d\t#Hold:%d\t"
                         "#Stocks:%d\tPV:%s\t"
                         "POS:%s\tNEG:%s\tLoss:%10.6f" % (
@@ -198,7 +197,7 @@ class PolicyLearner:
                 epoch_win_cnt += 1
 
         # 학습 관련 정보 로그 기록
-        logger.info("Max PV: %s, \t # Win: %d" % (
+        logging.info("Max PV: %s, \t # Win: %d" % (
             locale.currency(max_portfolio_value, grouping=True), epoch_win_cnt))
 
     def _get_batch(self, memory, batch_size, discount_factor, delayed_reward):
