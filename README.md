@@ -20,8 +20,3 @@
 - [교보문고](http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9791158391065)
 - [인터파크](http://book.interpark.com/product/BookDisplay.do?_method=detail&sc.prdNo=284220801)
 - [알라딘](http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=146574503)
-
-## 라이선스
-이 프로젝트는 아래 라이선스를 따릅니다.
-
-<a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/"><img alt="Creative Commons License" style="border-width:0" src="https://i.creativecommons.org/l/by-nc-sa/4.0/88x31.png" /></a><br />This work is licensed under a <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/4.0/">Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License</a>.
