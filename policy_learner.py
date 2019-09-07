@@ -1,3 +1,4 @@
+#-*- coding:utf-8 -*-
 import os
 import locale
 import logging
@@ -7,7 +8,6 @@ from environment import Environment
 from agent import Agent
 from policy_network import PolicyNetwork
 from visualizer import Visualizer
-
 
 locale.setlocale(locale.LC_ALL, 'ko_KR.UTF-8')
 

@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
+plt.switch_backend('agg')
 from mpl_finance import candlestick_ohlc
-
 
 class Visualizer:
 
@@ -29,8 +29,8 @@ class Visualizer:
         # 양봉은 빨간색으로 음봉은 파란색으로 표시
         candlestick_ohlc(ax, ohlc, colorup='r', colordown='b')
 
-    def plot(self, epoch_str=None, num_epoches=None, epsilon=None, 
-            action_list=None, actions=None, num_stocks=None, 
+    def plot(self, epoch_str=None, num_epoches=None, epsilon=None,
+            action_list=None, actions=None, num_stocks=None,
             outvals=None, exps=None, learning=None,
             initial_balance=None, pvs=None):
         x = np.arange(len(actions))  # 모든 차트가 공유할 x축 데이터
@@ -96,6 +96,6 @@ class Visualizer:
             ax.get_xaxis().get_major_formatter().set_scientific(False)  # 과학적 표기 비활성화
             ax.get_yaxis().get_major_formatter().set_scientific(False)  # 과학적 표기 비활성화
             ax.ticklabel_format(useOffset=False)  # x축 간격을 일정하게 설정
-            
+
     def save(self, path):
         plt.savefig(path)
