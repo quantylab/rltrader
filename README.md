@@ -1,6 +1,6 @@
-# 파이썬과 케라스를 이용한 딥러닝/강화학습 주식투자 - 퀀트 투자, 알고리즘 트레이딩을 위한 최첨단 해법 입문
+# 파이썬과 케라스를 이용한 딥러닝/강화학습 주식투자 - 퀀트 투자, 알고리즘 트레이딩을 위한 최첨단 해법 입문 (개정판)
 
-![표지](/img/front.jpg)
+![표지](/img/front.jpg =200x)
 
 강화학습은 스스로 학습하는 머신러닝 기법으로서 주식 데이터 학습에 잘 적용되는 기법입니다. 이 책은 파이썬을 이용한 강화학습 기반의 주식투자 시뮬레이션 프로그램을 개발하는 방법을 설명합니다. 이를 위해 이론과 코드 수준에서 상세한 설명을 덧붙였습니다. 이 책을 통해 딥러닝과 강화학습을 이해하고 이를 주식투자를 비롯한 다양한 도메인에서 활용할 수 있을 것입니다.
 
@@ -20,3 +20,11 @@
 - [교보문고](http://www.kyobobook.co.kr/product/detailViewKor.laf?barcode=9791158391065)
 - [인터파크](http://book.interpark.com/product/BookDisplay.do?_method=detail&sc.prdNo=284220801)
 - [알라딘](http://www.aladin.co.kr/shop/wproduct.aspx?ItemId=146574503)
+
+## 환경설정
+- [Anaconda 3.7+](https://www.anaconda.com/distribution/)
+- [TensorFlow 2.0.0+](https://www.tensorflow.org/)
+  - `conda install tensorflow`
+- [plaidML](https://plaidml.github.io/plaidml/)
+  - `pip install plaidml-keras==0.6.2`
+  - `pip install mplfinance`
