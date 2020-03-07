@@ -106,10 +106,10 @@ class Agent:
             action = np.argmax(pred)
 
         confidence = .5
-        if pred is not None:
+        if pred_policy is not None:
             confidence = pred[action]
-            if pred_policy is None:
-                confidence = utils.sigmoid(pred[action])
+        elif pred_value is not None:
+            confidence = utils.sigmoid(pred[action])
 
         return action, confidence, exploration
 

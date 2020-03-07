@@ -20,12 +20,13 @@ class Network:
     lock = threading.Lock()
 
     def __init__(self, input_dim=0, output_dim=0, lr=0.001, 
-                shared_network=None, activation='sigmoid'):
+                shared_network=None, activation='sigmoid', loss='mse'):
         self.input_dim = input_dim
         self.output_dim = output_dim
         self.lr = lr
         self.shared_network = shared_network
         self.activation = activation
+        self.loss = loss
         self.model = None
 
     def predict(self, sample):
@@ -50,14 +51,14 @@ class Network:
             self.model.load_weights(model_path)
 
     @classmethod
-    def get_shared_network(cls, net='dnn', n_steps=1, 
+    def get_shared_network(cls, net='dnn', num_steps=1, 
                         input_dim=0, sess=None, graph=None):
         if net == 'dnn':
             return DNN.get_network_head(Input((input_dim,)))
         elif net == 'lstm':
-            return LSTMNetwork.get_network_head(Input((n_steps, input_dim)))
+            return LSTMNetwork.get_network_head(Input((num_steps, input_dim)))
         elif net == 'cnn':
-            return CNN.get_network_head(Input((1, n_steps, input_dim)))
+            return CNN.get_network_head(Input((1, num_steps, input_dim)))
 
 
 class DNN(Network):
@@ -71,7 +72,7 @@ class DNN(Network):
         output = Dense(self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
-            optimizer=SGD(lr=self.lr), loss='mse')
+            optimizer=SGD(lr=self.lr), loss=self.loss)
 
     @staticmethod
     def get_network_head(inp):
@@ -107,10 +108,10 @@ class DNN(Network):
     
 
 class LSTMNetwork(Network):
-    def __init__(self, *args, n_steps=1, **kwargs):
+    def __init__(self, *args, num_steps=1, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_steps = n_steps
-        inp = Input((self.n_steps, self.input_dim))
+        self.num_steps = num_steps
+        inp = Input((self.num_steps, self.input_dim))
         output = None
         if self.shared_network is None:
             output = self.get_network_head(inp).output
@@ -119,7 +120,7 @@ class LSTMNetwork(Network):
         output = Dense(self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
-            optimizer=SGD(lr=self.lr), loss='mse')
+            optimizer=SGD(lr=self.lr), loss=self.loss)
 
     @staticmethod
     def get_network_head(inp):
@@ -140,21 +141,21 @@ class LSTMNetwork(Network):
         return Model(inp, output)
 
     def train_on_batch(self, x, y):
-        x = np.array(x).reshape((-1, self.n_steps, self.input_dim))
+        x = np.array(x).reshape((-1, self.num_steps, self.input_dim))
         return super().train_on_batch(x, y)
 
     def predict(self, sample):
-        sample = np.array(sample).reshape((1, self.n_steps, self.input_dim))
+        sample = np.array(sample).reshape((1, self.num_steps, self.input_dim))
         return super().predict(sample)
 
     def reset(self):
         self.model.reset_states()
 
 class CNN(Network):
-    def __init__(self, *args, n_steps=1, **kwargs):
+    def __init__(self, *args, num_steps=1, **kwargs):
         super().__init__(*args, **kwargs)
-        self.n_steps = n_steps
-        inp = Input((1, self.n_steps, self.input_dim))
+        self.num_steps = num_steps
+        inp = Input((1, self.num_steps, self.input_dim))
         if self.shared_network is None:
             output = self.get_network_head(inp).output
         else:
@@ -162,7 +163,7 @@ class CNN(Network):
         output = Dense(self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
-            optimizer=SGD(lr=self.lr), loss='mse')
+            optimizer=SGD(lr=self.lr), loss=self.loss)
 
     @staticmethod
     def get_network_head(inp):
@@ -191,9 +192,9 @@ class CNN(Network):
         return Model(inp, output)
 
     def train_on_batch(self, x, y):
-        x = np.array(x).reshape((-1, 1, self.n_steps, self.input_dim))
+        x = np.array(x).reshape((-1, 1, self.num_steps, self.input_dim))
         return super().train_on_batch(x, y)
 
     def predict(self, sample):
-        sample = np.array(sample).reshape((1, -1, self.n_steps, self.input_dim))
+        sample = np.array(sample).reshape((1, -1, self.num_steps, self.input_dim))
         return super().predict(sample)
