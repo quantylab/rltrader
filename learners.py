@@ -427,8 +427,8 @@ class DQNLearner(ReinforcementLearner):
         value_max_next = 0
         for i, (sample, action, value, reward) in enumerate(memory):
             x[i] = sample
-            y[i] = value
-            y[i, action] = delayed_reward - reward \
+            y_value[i] = value
+            y_value[i, action] = (delayed_reward - reward) * 100 \
                 + discount_factor * value_max_next
             value_max_next = value.max()
         return x, y, None
@@ -450,8 +450,10 @@ class PolicyGradientLearner(ReinforcementLearner):
         y = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
         for i, (sample, action, policy, reward) in enumerate(memory):
             x[i] = sample
-            y[i] = policy
-            y[i, action] = sigmoid(delayed_reward - reward)
+            y_policy[i] = policy
+            y_policy[i, action] = sigmoid(
+                (delayed_reward - reward) * 100)
+            y_policy[i, 1 - action] = 1 - y_policy[i, action]
         return x, None, y
 
 class ActorCriticLearner(ReinforcementLearner):
@@ -488,11 +490,12 @@ class ActorCriticLearner(ReinforcementLearner):
             x[i] = sample
             y_value[i] = value
             y_policy[i] = policy
-            y_value[i, action] = delayed_reward - reward \
+            y_value[i, action] = (delayed_reward - reward) * 100 \
                 + discount_factor * value_max_next
             a = np.argmax(y_value[i])
             v = y_value[i].max()
             y_policy[i, a] = sigmoid(v)
+            y_policy[i, 1 - action] = 1 - y_policy[i, action]
             value_max_next = value.max()
         return x, y_value, y_policy
 
@@ -518,11 +521,12 @@ class A2CLearner(ActorCriticLearner):
         for i, (sample, action, value, policy, reward) \
             in enumerate(memory):
             x[i] = sample
-            r = reward_next - reward
+            r = (reward_next - reward) * 100
             y_value[i, action] = r + discount_factor * value_max_next
             advantage = r + discount_factor * value_mean_next \
                 - np.mean(value)
             y_policy[i, action] = sigmoid(advantage)
+            y_policy[i, 1 - action] = 1 - y_policy[i, action]
             value_max_next = value.max()
             value_mean_next = value.mean()
             reward_next = reward
