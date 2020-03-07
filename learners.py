@@ -139,8 +139,6 @@ class ReinforcementLearner:
         self.environment.reset()
         # 에이전트 초기화
         self.agent.reset()
-        # 신경망 초기화
-        self.reset_networks()
         # 가시화 초기화
         self.visualizer.clear([0, len(self.chart_data)])
         # 메모리 초기화
@@ -160,12 +158,6 @@ class ReinforcementLearner:
         self.batch_size = 0
         self.pos_learning_cnt = 0
         self.neg_learning_cnt = 0
-
-    def reset_networks(self):
-        if self.value_network is not None:
-            self.value_network.reset()
-        if self.policy_network is not None:
-            self.policy_network.reset()
 
     def visualize(self, epoch_str, num_epoches, epsilon):
         self.memory_action = [Agent.ACTION_HOLD] \

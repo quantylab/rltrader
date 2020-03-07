@@ -37,7 +37,7 @@ class Agent:
         self.initial_balance = 0  # 초기 자본금
         self.balance = 0  # 현재 현금 잔고
         self.num_stocks = 0  # 보유 주식 수
-        # PV = balance + num_stocks * {현재 주식 가격}
+        # 포트폴리오 가치: balance + num_stocks * {현재 주식 가격}
         self.portfolio_value = 0 
         self.base_portfolio_value = 0  # 직전 학습 시점의 PV
         self.num_buy = 0  # 매수 횟수
@@ -138,10 +138,6 @@ class Agent:
         ), 0)
         return self.min_trading_unit + added_traiding
 
-    def gen_delayed_reward(self):
-        self.base_portfolio_value = self.portfolio_value
-        return self.profitloss
-
     def act(self, action, confidence):
         if not self.validate_action(action):
             action = Agent.ACTION_HOLD
@@ -205,7 +201,6 @@ class Agent:
                 / self.initial_balance
         )
         
-
         # 즉시 보상 - 수익률
         self.immediate_reward = self.profitloss
 
@@ -219,7 +214,8 @@ class Agent:
             self.base_profitloss < -self.delayed_reward_threshold:
             # 목표 수익률 달성하여 기준 포트폴리오 가치 갱신
             # 또는 손실 기준치를 초과하여 기준 포트폴리오 가치 갱신
-            delayed_reward = self.gen_delayed_reward()
+            self.base_portfolio_value = self.portfolio_value
+            delayed_reward = self.immediate_reward
         else:
             delayed_reward = 0
 

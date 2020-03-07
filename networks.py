@@ -37,9 +37,6 @@ class Network:
             loss = self.model.train_on_batch(x, y)
         return loss
 
-    def reset(self):
-        pass
-
     def save_model(self, model_path):
         if model_path is not None and self.model is not None:
             self.model.save_weights(model_path, overwrite=True)
@@ -151,8 +148,6 @@ class LSTMNetwork(Network):
             (1, self.num_steps, self.input_dim))
         return super().predict(sample)
 
-    def reset(self):
-        self.model.reset_states()
 
 class CNN(Network):
     def __init__(self, *args, num_steps=1, **kwargs):
