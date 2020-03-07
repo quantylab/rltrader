@@ -415,7 +415,7 @@ class DQNLearner(ReinforcementLearner):
             reversed(self.memory_reward[-batch_size:]),
         )
         x = np.zeros((batch_size, self.num_steps, self.num_features))
-        y = np.zeros((batch_size, self.agent.NUM_ACTIONS))
+        y_value = np.zeros((batch_size, self.agent.NUM_ACTIONS))
         value_max_next = 0
         for i, (sample, action, value, reward) in enumerate(memory):
             x[i] = sample
@@ -423,7 +423,7 @@ class DQNLearner(ReinforcementLearner):
             y_value[i, action] = (delayed_reward - reward) * 100 \
                 + discount_factor * value_max_next
             value_max_next = value.max()
-        return x, y, None
+        return x, y_value, None
 
 class PolicyGradientLearner(ReinforcementLearner):
     def __init__(self, *args, policy_network_path=None, **kwargs):
@@ -439,14 +439,14 @@ class PolicyGradientLearner(ReinforcementLearner):
             reversed(self.memory_reward[-batch_size:]),
         )
         x = np.zeros((batch_size, self.num_steps, self.num_features))
-        y = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
+        y_policy = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
         for i, (sample, action, policy, reward) in enumerate(memory):
             x[i] = sample
             y_policy[i] = policy
             y_policy[i, action] = sigmoid(
                 (delayed_reward - reward) * 100)
             y_policy[i, 1 - action] = 1 - y_policy[i, action]
-        return x, None, y
+        return x, None, y_policy
 
 class ActorCriticLearner(ReinforcementLearner):
     def __init__(self, *args, shared_network=None, 
