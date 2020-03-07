@@ -4,14 +4,12 @@ import numpy as np
 
 if os.environ['KERAS_BACKEND'] == 'tensorflow':
     from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Input, \
-        Dense, LSTM, Conv2D, \
+    from tensorflow.keras.layers import Input, Dense, LSTM, Conv2D, \
         BatchNormalization, Dropout, MaxPooling2D, Flatten
     from tensorflow.keras.optimizers import SGD
 elif os.environ['KERAS_BACKEND'] == 'plaidml.keras.backend':
     from keras.models import Model
-    from keras.layers import Input, \
-        Dense, LSTM, Conv2D, \
+    from keras.layers import Input, Dense, LSTM, Conv2D, \
         BatchNormalization, Dropout, MaxPooling2D, Flatten
     from keras.optimizers import SGD
 
@@ -56,9 +54,11 @@ class Network:
         if net == 'dnn':
             return DNN.get_network_head(Input((input_dim,)))
         elif net == 'lstm':
-            return LSTMNetwork.get_network_head(Input((num_steps, input_dim)))
+            return LSTMNetwork.get_network_head(
+                Input((num_steps, input_dim)))
         elif net == 'cnn':
-            return CNN.get_network_head(Input((1, num_steps, input_dim)))
+            return CNN.get_network_head(
+                Input((1, num_steps, input_dim)))
 
 
 class DNN(Network):
@@ -69,7 +69,8 @@ class DNN(Network):
             output = self.get_network_head(inp).output
         else:
             output = self.shared_network.output
-        output = Dense(self.output_dim, activation=self.activation)(output)
+        output = Dense(
+            self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
@@ -117,7 +118,8 @@ class LSTMNetwork(Network):
             output = self.get_network_head(inp).output
         else:
             output = self.shared_network.output
-        output = Dense(self.output_dim, activation=self.activation)(output)
+        output = Dense(
+            self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
@@ -145,7 +147,8 @@ class LSTMNetwork(Network):
         return super().train_on_batch(x, y)
 
     def predict(self, sample):
-        sample = np.array(sample).reshape((1, self.num_steps, self.input_dim))
+        sample = np.array(sample).reshape(
+            (1, self.num_steps, self.input_dim))
         return super().predict(sample)
 
     def reset(self):
@@ -160,7 +163,8 @@ class CNN(Network):
             output = self.get_network_head(inp).output
         else:
             output = self.shared_network.output
-        output = Dense(self.output_dim, activation=self.activation)(output)
+        output = Dense(
+            self.output_dim, activation=self.activation)(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
@@ -196,5 +200,6 @@ class CNN(Network):
         return super().train_on_batch(x, y)
 
     def predict(self, sample):
-        sample = np.array(sample).reshape((1, -1, self.num_steps, self.input_dim))
+        sample = np.array(sample).reshape(
+            (1, -1, self.num_steps, self.input_dim))
         return super().predict(sample)
