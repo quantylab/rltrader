@@ -425,6 +425,7 @@ class DQNLearner(ReinforcementLearner):
             value_max_next = value.max()
         return x, y_value, None
 
+
 class PolicyGradientLearner(ReinforcementLearner):
     def __init__(self, *args, policy_network_path=None, **kwargs):
         super().__init__(*args, **kwargs)
@@ -445,8 +446,8 @@ class PolicyGradientLearner(ReinforcementLearner):
             y_policy[i] = policy
             y_policy[i, action] = sigmoid(
                 (delayed_reward - reward) * 100)
-            y_policy[i, 1 - action] = 1 - y_policy[i, action]
         return x, None, y_policy
+
 
 class ActorCriticLearner(ReinforcementLearner):
     def __init__(self, *args, shared_network=None, 
@@ -484,10 +485,7 @@ class ActorCriticLearner(ReinforcementLearner):
             y_policy[i] = policy
             y_value[i, action] = (delayed_reward - reward) * 100 \
                 + discount_factor * value_max_next
-            a = np.argmax(y_value[i])
-            v = y_value[i].max()
-            y_policy[i, a] = sigmoid(v)
-            y_policy[i, 1 - action] = 1 - y_policy[i, action]
+            y_policy[i, action] = sigmoid(value[action] - value.mean())
             value_max_next = value.max()
         return x, y_value, y_policy
 
@@ -513,15 +511,13 @@ class A2CLearner(ActorCriticLearner):
         for i, (sample, action, value, policy, reward) \
             in enumerate(memory):
             x[i] = sample
-            r = (reward_next - reward) * 100
+            r = (delayed_reward - reward) * 100
             y_value[i, action] = r + discount_factor * value_max_next
             advantage = r + discount_factor * value_mean_next \
                 - np.mean(value)
             y_policy[i, action] = sigmoid(advantage)
-            y_policy[i, 1 - action] = 1 - y_policy[i, action]
             value_max_next = value.max()
             value_mean_next = value.mean()
-            reward_next = reward
         return x, y_value, y_policy
 
 
