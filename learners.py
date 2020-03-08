@@ -1,6 +1,4 @@
-#-*- coding:utf-8 -*-
 import os
-import locale
 import logging
 import abc
 import collections
