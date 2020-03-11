@@ -67,7 +67,8 @@ class DNN(Network):
         else:
             output = self.shared_network.output
         output = Dense(
-            self.output_dim, activation=self.activation)(output)
+            self.output_dim, activation=self.activation, 
+            kernel_initializer='random_normal')(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
@@ -75,23 +76,19 @@ class DNN(Network):
     @staticmethod
     def get_network_head(inp):
         output = Dense(256, activation='sigmoid', 
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(inp)
+            kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
         output = Dropout(0.1)(output)
         output = Dense(128, activation='sigmoid', 
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = Dropout(0.1)(output)
         output = Dense(64, activation='sigmoid', 
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = Dropout(0.1)(output)
         output = Dense(32, activation='sigmoid', 
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = Dropout(0.1)(output)
         return Model(inp, output)
@@ -116,26 +113,29 @@ class LSTMNetwork(Network):
         else:
             output = self.shared_network.output
         output = Dense(
-            self.output_dim, activation=self.activation)(output)
+            self.output_dim, activation=self.activation, 
+            kernel_initializer='random_normal')(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
 
     @staticmethod
     def get_network_head(inp):
-        output = LSTM(128, dropout=0.1, 
-            return_sequences=True,
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(inp)
+        output = LSTM(256, dropout=0.1, 
+            return_sequences=True, stateful=False,
+            kernel_initializer='random_normal')(inp)
+        output = BatchNormalization()(output)
+        output = LSTM(128, dropout=0.1,
+            return_sequences=True, stateful=False,
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = LSTM(64, dropout=0.1,
-            return_sequences=True,
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            return_sequences=True, stateful=False,
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = LSTM(32, dropout=0.1,
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            stateful=False,
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         return Model(inp, output)
 
@@ -153,37 +153,41 @@ class CNN(Network):
     def __init__(self, *args, num_steps=1, **kwargs):
         super().__init__(*args, **kwargs)
         self.num_steps = num_steps
-        inp = Input((1, self.num_steps, self.input_dim))
+        inp = Input((self.num_steps, self.input_dim, 1))
         if self.shared_network is None:
             output = self.get_network_head(inp).output
         else:
             output = self.shared_network.output
         output = Dense(
-            self.output_dim, activation=self.activation)(output)
+            self.output_dim, activation=self.activation,
+            kernel_initializer='random_normal')(output)
         self.model = Model(inp, output)
         self.model.compile(
             optimizer=SGD(lr=self.lr), loss=self.loss)
 
     @staticmethod
     def get_network_head(inp):
+        output = Conv2D(256, kernel_size=(1, 5),
+            padding='same', activation='sigmoid',
+            kernel_initializer='random_normal')(inp)
+        output = BatchNormalization()(output)
+        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = Dropout(0.1)(output)
         output = Conv2D(128, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(inp)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = MaxPooling2D(pool_size=(1, 2))(output)
         output = Dropout(0.1)(output)
         output = Conv2D(64, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = MaxPooling2D(pool_size=(1, 2))(output)
         output = Dropout(0.1)(output)
         output = Conv2D(32, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
-            kernel_initializer='random_normal', 
-            bias_initializer='zeros')(output)
+            kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = MaxPooling2D(pool_size=(1, 2))(output)
         output = Dropout(0.1)(output)
@@ -191,10 +195,10 @@ class CNN(Network):
         return Model(inp, output)
 
     def train_on_batch(self, x, y):
-        x = np.array(x).reshape((-1, 1, self.num_steps, self.input_dim))
+        x = np.array(x).reshape((-1, self.num_steps, self.input_dim, 1))
         return super().train_on_batch(x, y)
 
     def predict(self, sample):
         sample = np.array(sample).reshape(
-            (1, -1, self.num_steps, self.input_dim))
+            (-1, self.num_steps, self.input_dim, 1))
         return super().predict(sample)

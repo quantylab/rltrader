@@ -335,7 +335,6 @@ class ReinforcementLearner:
                     self.loss, elapsed_time_epoch))
 
             # 에포크 관련 정보 가시화
-            # if epoch < 10 or (epoch + 1) % 10 == 0:
             self.visualize(epoch_str, num_epoches, epsilon)
 
             # 학습 관련 정보 갱신
@@ -415,12 +414,14 @@ class DQNLearner(ReinforcementLearner):
         x = np.zeros((batch_size, self.num_steps, self.num_features))
         y_value = np.zeros((batch_size, self.agent.NUM_ACTIONS))
         value_max_next = 0
+        reward_next = self.memory_reward[-1]
         for i, (sample, action, value, reward) in enumerate(memory):
             x[i] = sample
             y_value[i] = value
-            y_value[i, action] = (delayed_reward - reward) * 100 \
-                + discount_factor * value_max_next
+            r = (delayed_reward + reward_next - reward * 2) * 100
+            y_value[i, action] = r + discount_factor * value_max_next
             value_max_next = value.max()
+            reward_next = reward
         return x, y_value, None
 
 
@@ -439,11 +440,13 @@ class PolicyGradientLearner(ReinforcementLearner):
         )
         x = np.zeros((batch_size, self.num_steps, self.num_features))
         y_policy = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
+        reward_next = self.memory_reward[-1]
         for i, (sample, action, policy, reward) in enumerate(memory):
             x[i] = sample
             y_policy[i] = policy
-            y_policy[i, action] = sigmoid(
-                (delayed_reward - reward) * 100)
+            r = (delayed_reward + reward_next - reward * 2) * 100
+            y_policy[i, action] = sigmoid(r)
+            reward_next = reward
         return x, None, y_policy
 
 
@@ -476,15 +479,17 @@ class ActorCriticLearner(ReinforcementLearner):
         y_value = np.zeros((batch_size, self.agent.NUM_ACTIONS))
         y_policy = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
         value_max_next = 0
+        reward_next = self.memory_reward[-1]
         for i, (sample, action, value, policy, reward) \
             in enumerate(memory):
             x[i] = sample
             y_value[i] = value
             y_policy[i] = policy
-            y_value[i, action] = (delayed_reward - reward) * 100 \
-                + discount_factor * value_max_next
+            r = (delayed_reward + reward_next - reward * 2) * 100
+            y_value[i, action] = r + discount_factor * value_max_next
             y_policy[i, action] = sigmoid(value[action] - value.mean())
             value_max_next = value.max()
+            reward_next = reward
         return x, y_value, y_policy
 
 
@@ -509,13 +514,14 @@ class A2CLearner(ActorCriticLearner):
         for i, (sample, action, value, policy, reward) \
             in enumerate(memory):
             x[i] = sample
-            r = (delayed_reward - reward) * 100
+            r = (delayed_reward + reward_next - reward * 2) * 100
             y_value[i, action] = r + discount_factor * value_max_next
             advantage = r + discount_factor * value_mean_next \
                 - np.mean(value)
             y_policy[i, action] = sigmoid(advantage)
             value_max_next = value.max()
             value_mean_next = value.mean()
+            reward_next = reward
         return x, y_value, y_policy
 
 

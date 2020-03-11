@@ -71,7 +71,14 @@ class Visualizer:
 
             # 차트 3. 가치 신경망
             if len(outvals_value) > 0:
+                max_actions = np.argmax(outvals_value)
                 for action, color in zip(action_list, self.COLORS):
+                    # 배경 그리기
+                    for idx in x:
+                        if max_actions[idx] == action:
+                            self.axes[2].axvline(idx, 
+                                color=color, alpha=0.1)
+                    # 가치 신경망 출력의 tanh 그리기
                     self.axes[2].plot(x, outvals_value[:, action], 
                         color=color, linestyle='-')
             
@@ -84,6 +91,8 @@ class Visualizer:
                 else outvals_value
             for idx, outval in zip(x, _outvals):
                 color = 'white'
+                if np.isnan(outval.max()):
+                    continue
                 if outval.argmax() == Agent.ACTION_BUY:
                     color = 'r'  # 매수 빨간색
                 elif outval.argmax() == Agent.ACTION_SELL:

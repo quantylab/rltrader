@@ -33,10 +33,8 @@ if __name__ == '__main__':
     parser.add_argument('--output_name', default=utils.get_time_str())
     parser.add_argument('--value_network_name')
     parser.add_argument('--policy_network_name')
-    parser.add_argument('--reuse_models', 
-        action='store_true', default=False)
-    parser.add_argument('--learning', 
-        action='store_true', default=False)
+    parser.add_argument('--reuse_models', action='store_true')
+    parser.add_argument('--learning', action='store_true')
     args = parser.parse_args()
 
     # Keras Backend 설정
