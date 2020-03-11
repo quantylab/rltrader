@@ -71,7 +71,7 @@ class Visualizer:
 
             # 차트 3. 가치 신경망
             if len(outvals_value) > 0:
-                max_actions = np.argmax(outvals_value)
+                max_actions = np.argmax(outvals_value, axis=1)
                 for action, color in zip(action_list, self.COLORS):
                     # 배경 그리기
                     for idx in x:
