@@ -226,7 +226,8 @@ class ReinforcementLearner:
 
         # 가시화 결과 저장할 폴더 준비
         self.epoch_summary_dir = os.path.join(
-            self.output_path, 'epoch_summary')
+            self.output_path, 'epoch_summary_{}'.format(
+                self.stock_code))
         if not os.path.isdir(self.epoch_summary_dir):
             os.makedirs(self.epoch_summary_dir)
         else:
