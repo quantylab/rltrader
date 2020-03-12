@@ -525,12 +525,26 @@ class A2CLearner(ActorCriticLearner):
         return x, y_value, y_policy
 
 
-class A3CLearner(A2CLearner):
+class A3CLearner(ReinforcementLearner):
     def __init__(self, *args, list_stock_code=None, 
         list_chart_data=None, list_training_data=None,
         list_min_trading_unit=None, list_max_trading_unit=None, 
+        value_network_path=None, policy_network_path=None,
         **kwargs):
+        assert len(list_training_data) > 0
         super().__init__(*args, **kwargs)
+        self.num_features += list_training_data[0].shape[1]
+
+        # 공유 신경망 생성
+        self.shared_network = Network.get_shared_network(
+            net=self.net, num_steps=self.num_steps, 
+            input_dim=self.num_features)
+        self.value_network_path = value_network_path
+        self.policy_network_path = policy_network_path
+        if self.value_network is None:
+            self.init_value_network(shared_network=self.shared_network)
+        if self.policy_network is None:
+            self.init_policy_network(shared_network=self.shared_network)
 
         # A2CLearner 생성
         self.learners = []
@@ -539,20 +553,23 @@ class A3CLearner(A2CLearner):
                 list_stock_code, list_chart_data, list_training_data,
                 list_min_trading_unit, list_max_trading_unit
             ):
-            learner = A2CLearner(*args, rl_method='a3c', 
+            learner = A2CLearner(*args, 
                 stock_code=stock_code, chart_data=chart_data, 
                 training_data=training_data,
                 min_trading_unit=min_trading_unit, 
-                max_trading_unit=max_trading_unit, **kwargs)
+                max_trading_unit=max_trading_unit, 
+                shared_network=self.shared_network,
+                value_network=self.value_network,
+                policy_network=self.policy_network, **kwargs)
             self.learners.append(learner)
 
     def run(
         self, num_epoches=100, balance=10000000,
-        discount_factor=0.9, start_epsilon=0.9, learning=True):
+        discount_factor=0.9, start_epsilon=0.5, learning=True):
         threads = []
         for learner in self.learners:
             threads.append(threading.Thread(
-                target=learner.fit, daemon=True, kwargs={
+                target=learner.run, daemon=True, kwargs={
                 'num_epoches': num_epoches, 'balance': balance,
                 'discount_factor': discount_factor, 
                 'start_epsilon': start_epsilon,

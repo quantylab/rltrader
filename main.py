@@ -35,6 +35,8 @@ if __name__ == '__main__':
     parser.add_argument('--policy_network_name')
     parser.add_argument('--reuse_models', action='store_true')
     parser.add_argument('--learning', action='store_true')
+    parser.add_argument('--start_date', default='20170101')
+    parser.add_argument('--end_date', default='20171231')
     args = parser.parse_args()
 
     # Keras Backend 설정
@@ -71,14 +73,18 @@ if __name__ == '__main__':
     policy_network_path = ''
     if args.value_network_name is not None:
         value_network_path = os.path.join(settings.BASE_DIR, 
-            'output/models/{}.h5'.format(args.value_network_name))
+            'models/{}.h5'.format(args.value_network_name))
     else:
-        value_network_path = os.path.join(output_path, '{}_{}_value_{}.h5'.format(args.rl_method, args.net, args.output_name))
+        value_network_path = os.path.join(
+            output_path, '{}_{}_value_{}.h5'.format(
+                args.rl_method, args.net, args.output_name))
     if args.policy_network_name is not None:
         policy_network_path = os.path.join(settings.BASE_DIR, 
-            'output/models/{}.h5'.format(args.policy_network_name))
+            'models/{}.h5'.format(args.policy_network_name))
     else:
-        policy_network_path = os.path.join(output_path, '{}_{}_policy_{}.h5'.format(args.rl_method, args.net, args.output_name))
+        policy_network_path = os.path.join(
+            output_path, '{}_{}_policy_{}.h5'.format(
+                args.rl_method, args.net, args.output_name))
 
     list_stock_code = []
     list_chart_data = []
@@ -89,41 +95,53 @@ if __name__ == '__main__':
     for stock_code in args.stock_code:
         # 차트 데이터, 학습 데이터 준비
         chart_data, training_data = data_manager.load_data(
-            os.path.join(settings.BASE_DIR, 'data/{}/{}.csv'.format(args.ver, stock_code)), 
-            '20170101', '20171231', ver=args.ver)
+            os.path.join(settings.BASE_DIR, 
+            'data/{}/{}.csv'.format(args.ver, stock_code)), 
+            args.start_date, args.end_date, ver=args.ver)
         
         # 최소/최대 투자 단위 설정
-        min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)
-        max_trading_unit = max(int(1000000 / chart_data.iloc[-1]['close']), 1)
+        min_trading_unit = max(
+            int(100000 / chart_data.iloc[-1]['close']), 1)
+        max_trading_unit = max(
+            int(1000000 / chart_data.iloc[-1]['close']), 1)
 
         # 공통 파라미터 설정
         common_params = {'rl_method': args.rl_method, 
-                        'delayed_reward_threshold': args.delayed_reward_threshold,
-                        'net': args.net, 'num_steps': args.num_steps, 'lr': args.lr,
-                        'output_path': output_path, 'reuse_models': args.reuse_models}
+            'delayed_reward_threshold': args.delayed_reward_threshold,
+            'net': args.net, 'num_steps': args.num_steps, 'lr': args.lr,
+            'output_path': output_path, 
+            'reuse_models': args.reuse_models}
 
         # 강화학습 시작
         learner = None
         if args.rl_method != 'a3c':
             common_params.update({'stock_code': stock_code,
-                'chart_data': chart_data, 'training_data': training_data,
-                'min_trading_unit': min_trading_unit, 'max_trading_unit': max_trading_unit})
+                'chart_data': chart_data, 
+                'training_data': training_data,
+                'min_trading_unit': min_trading_unit, 
+                'max_trading_unit': max_trading_unit})
             if args.rl_method == 'dqn':
-                learner = DQNLearner(**{**common_params, 'value_network_path': value_network_path})
+                learner = DQNLearner(**{**common_params, 
+                'value_network_path': value_network_path})
             elif args.rl_method == 'pg':
-                learner = PolicyGradientLearner(**{**common_params, 'policy_network_path': policy_network_path})
+                learner = PolicyGradientLearner(**{**common_params, 
+                'policy_network_path': policy_network_path})
             elif args.rl_method == 'ac':
                 learner = ActorCriticLearner(**{
                     **common_params, 
-                    'value_network_path': value_network_path, 'policy_network_path': policy_network_path})
+                    'value_network_path': value_network_path, 
+                    'policy_network_path': policy_network_path})
             elif args.rl_method == 'a2c':
                 learner = A2CLearner(**{
                     **common_params, 
-                    'value_network_path': value_network_path, 'policy_network_path': policy_network_path})
+                    'value_network_path': value_network_path, 
+                    'policy_network_path': policy_network_path})
             if learner is not None:
-                learner.run(balance=args.balance, num_epoches=args.num_epoches, 
-                            discount_factor=args.discount_factor, start_epsilon=args.start_epsilon,
-                            learning=args.learning)
+                learner.run(balance=args.balance, 
+                    num_epoches=args.num_epoches, 
+                    discount_factor=args.discount_factor, 
+                    start_epsilon=args.start_epsilon,
+                    learning=args.learning)
                 learner.save_models()
         else:
             list_stock_code.append(stock_code)
@@ -136,12 +154,16 @@ if __name__ == '__main__':
         learner = A3CLearner(**{
             **common_params, 
             'list_stock_code': list_stock_code, 
-            'list_chart_data': list_chart_data, 'list_training_data': list_training_data,
-            'list_min_trading_unit': list_min_trading_unit, 'list_max_trading_unit': list_max_trading_unit,
-            'value_network_path': value_network_path, 'policy_network_path': policy_network_path})
+            'list_chart_data': list_chart_data, 
+            'list_training_data': list_training_data,
+            'list_min_trading_unit': list_min_trading_unit, 
+            'list_max_trading_unit': list_max_trading_unit,
+            'value_network_path': value_network_path, 
+            'policy_network_path': policy_network_path})
 
         learner.run(balance=args.balance, num_epoches=args.num_epoches, 
-                    discount_factor=args.discount_factor, start_epsilon=args.start_epsilon,
+                    discount_factor=args.discount_factor, 
+                    start_epsilon=args.start_epsilon,
                     learning=args.learning)
         learner.save_models()
         
