@@ -14,6 +14,7 @@ from visualizer import Visualizer
 
 class ReinforcementLearner:
     __metaclass__ = abc.ABCMeta
+    lock = threading.Lock()
 
     def __init__(self, rl_method='rl', stock_code=None, 
                 chart_data=None, training_data=None,
@@ -215,7 +216,8 @@ class ReinforcementLearner:
             max_trading_unit=self.agent.max_trading_unit,
             delayed_reward_threshold=self.agent.delayed_reward_threshold
         )
-        logging.info(info)
+        with self.lock:
+            logging.info(info)
 
         # 시작 시간
         time_start = time.time()
@@ -323,17 +325,19 @@ class ReinforcementLearner:
             if self.pos_learning_cnt + self.neg_learning_cnt > 0:
                 self.loss /= self.pos_learning_cnt \
                     + self.neg_learning_cnt
-            logging.info("[{}][Epoch {}/{}] Epsilon:{:.4f} "
-                "#Expl.:{}/{} #Buy:{} #Sell:{} #Hold:{} "
-                "#Stocks:{} PV:{:,.0f} "
-                "POS:{} NEG:{} Loss:{:.6f} ET:{:.4f}".format(
-                    self.stock_code, epoch_str, num_epoches, epsilon, 
-                    self.exploration_cnt, self.itr_cnt,
-                    self.agent.num_buy, self.agent.num_sell, 
-                    self.agent.num_hold, self.agent.num_stocks, 
-                    self.agent.portfolio_value,
-                    self.pos_learning_cnt, self.neg_learning_cnt, 
-                    self.loss, elapsed_time_epoch))
+            with self.lock:
+                logging.info("[{}][Epoch {}/{}] Epsilon:{:.4f} "
+                    "#Expl.:{}/{} #Buy:{} #Sell:{} #Hold:{} "
+                    "#Stocks:{} PV:{:,.0f} "
+                    "POS:{} NEG:{} Loss:{:.6f} ET:{:.4f}".format(
+                        self.stock_code, epoch_str, 
+                        num_epoches, epsilon, 
+                        self.exploration_cnt, self.itr_cnt,
+                        self.agent.num_buy, self.agent.num_sell, 
+                        self.agent.num_hold, self.agent.num_stocks, 
+                        self.agent.portfolio_value,
+                        self.pos_learning_cnt, self.neg_learning_cnt, 
+                        self.loss, elapsed_time_epoch))
 
             # 에포크 관련 정보 가시화
             self.visualize(epoch_str, num_epoches, epsilon)
@@ -349,10 +353,11 @@ class ReinforcementLearner:
         elapsed_time = time_end - time_start
 
         # 학습 관련 정보 로그 기록
-        logging.info("[{code}] Elapsed Time:{elapsed_time:.4f} "
-            "Max PV:{max_pv:,.0f} #Win:{cnt_win}".format(
-            code=self.stock_code, elapsed_time=elapsed_time, 
-            max_pv=max_portfolio_value, cnt_win=epoch_win_cnt))
+        with self.lock:
+            logging.info("[{code}] Elapsed Time:{elapsed_time:.4f} "
+                "Max PV:{max_pv:,.0f} #Win:{cnt_win}".format(
+                code=self.stock_code, elapsed_time=elapsed_time, 
+                max_pv=max_portfolio_value, cnt_win=epoch_win_cnt))
 
     def build_sample(self):
         self.environment.observe()
