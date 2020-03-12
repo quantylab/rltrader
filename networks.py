@@ -3,18 +3,18 @@ import threading
 import numpy as np
 
 
-class Dummy:
+class DummyGraph:
     def as_default():
         return self
 
     def __enter__():
         pass
 
-    def close():
+    def __exit__():
         pass
 
 
-graph = Dummy()
+graph = DummyGraph()
 sess = None
 
 
