@@ -48,7 +48,6 @@ class Network:
         self.loss = loss
         self.model = None
 
-
     def predict(self, sample):
         with self.lock:
             with graph.as_default():
