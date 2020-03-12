@@ -14,6 +14,7 @@ from visualizer import Visualizer
 
 class ReinforcementLearner:
     __metaclass__ = abc.ABCMeta
+    lock = threading.Lock()
 
     def __init__(self, rl_method='rl', stock_code=None, 
                 chart_data=None, training_data=None,
