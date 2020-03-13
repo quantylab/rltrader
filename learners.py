@@ -186,11 +186,13 @@ class ReinforcementLearner:
             return loss
         return None
 
-    def fit(self, delayed_reward, discount_factor):
+    def fit(self, delayed_reward, discount_factor, full=False):
+        batch_size = len(self.memory_reward) if full \
+            else self.batch_size
         # 배치 학습 데이터 생성 및 신경망 갱신
-        if self.batch_size > 0:
+        if batch_size > 0:
             _loss = self.update_networks(
-                self.batch_size, delayed_reward, discount_factor)
+                batch_size, delayed_reward, discount_factor)
             if _loss is not None:
                 self.loss += abs(_loss)
                 self.learning_cnt += 1
@@ -340,7 +342,8 @@ class ReinforcementLearner:
 
             # 에포크 종료 후 학습
             if learning:
-                self.fit(self.agent.profitloss, discount_factor)
+                self.fit(
+                    self.agent.profitloss, discount_factor, full=True)
 
             # 에포크 관련 정보 로그 기록
             num_epoches_digit = len(str(num_epoches))
@@ -478,7 +481,7 @@ class ActorCriticLearner(ReinforcementLearner):
             y_policy[i] = policy
             r = (delayed_reward + reward_next - reward * 2) * 100
             y_value[i, action] = r + discount_factor * value_max_next
-            y_policy[i, action] = sigmoid(value[action] - value.mean())
+            y_policy[i, action] = sigmoid(value[action])
             value_max_next = value.max()
             reward_next = reward
         return x, y_value, y_policy
@@ -500,18 +503,15 @@ class A2CLearner(ActorCriticLearner):
         y_value = np.zeros((batch_size, self.agent.NUM_ACTIONS))
         y_policy = np.full((batch_size, self.agent.NUM_ACTIONS), .5)
         value_max_next = 0
-        value_mean_next = 0
         reward_next = self.memory_reward[-1]
         for i, (sample, action, value, policy, reward) \
             in enumerate(memory):
             x[i] = sample
             r = (delayed_reward + reward_next - reward * 2) * 100
             y_value[i, action] = r + discount_factor * value_max_next
-            advantage = r + discount_factor * value_mean_next \
-                - np.mean(value)
+            advantage = value[action] - value.mean()
             y_policy[i, action] = sigmoid(advantage)
             value_max_next = value.max()
-            value_mean_next = value.mean()
             reward_next = reward
         return x, y_value, y_policy
 
