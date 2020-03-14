@@ -4,14 +4,11 @@ import numpy as np
 
 
 class DummyGraph:
-    def as_default():
-        return self
+    def as_default(self): return self
+    def __enter__(self): pass
+    def __exit__(self, type, value, traceback): pass
 
-    def __enter__():
-        pass
-
-    def __exit__():
-        pass
+def set_session(sess): pass
 
 
 graph = DummyGraph()
@@ -32,7 +29,6 @@ elif os.environ['KERAS_BACKEND'] == 'plaidml.keras.backend':
     from keras.layers import Input, Dense, LSTM, Conv2D, \
         BatchNormalization, Dropout, MaxPooling2D, Flatten
     from keras.optimizers import SGD
-    from keras.backend import set_session
 
 
 class Network:

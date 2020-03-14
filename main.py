@@ -3,9 +3,6 @@ import sys
 import logging
 import argparse
 import json
-from datetime import datetime, timedelta
-import time
-from pytz import timezone
 
 import settings
 import utils
