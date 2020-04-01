@@ -7,9 +7,10 @@ class Agent:
     STATE_DIM = 2  # 주식 보유 비율, 포트폴리오 가치 비율
 
     # 매매 수수료 및 세금
-    TRADING_CHARGE = 0.00015  # 거래 수수료 (일반적으로 0.015%)
-    TRADING_TAX = 0.0025  # 거래세 (실제 0.25%)
+    TRADING_CHARGE = 0.00015  # 거래 수수료 0.015%
+    # TRADING_CHARGE = 0.00011  # 거래 수수료 0.011%
     # TRADING_CHARGE = 0  # 거래 수수료 미적용
+    TRADING_TAX = 0.0025  # 거래세 0.25%
     # TRADING_TAX = 0  # 거래세 미적용
 
     # 행동

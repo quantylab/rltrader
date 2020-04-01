@@ -45,7 +45,7 @@ if __name__ == '__main__':
     # 출력 경로 설정
     output_path = os.path.join(settings.BASE_DIR, 
         'output/{}_{}_{}'.format(args.output_name, args.rl_method, args.net))
-    if not os.path.exists(output_path):
+    if not os.path.isdir(output_path):
         os.makedirs(output_path)
 
     # 파라미터 기록
@@ -59,11 +59,12 @@ if __name__ == '__main__':
     file_handler.setLevel(logging.DEBUG)
     stream_handler.setLevel(logging.INFO)
     logging.basicConfig(format="%(message)s",
-                        handlers=[file_handler, stream_handler], level=logging.DEBUG)
+        handlers=[file_handler, stream_handler], level=logging.DEBUG)
         
     # 로그, Keras Backend 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
     from agent import Agent
-    from learners import DQNLearner, PolicyGradientLearner, ActorCriticLearner, A2CLearner, A3CLearner
+    from learners import DQNLearner, PolicyGradientLearner, \
+        ActorCriticLearner, A2CLearner, A3CLearner
 
     # 모델 경로 준비
     value_network_path = ''
@@ -83,6 +84,7 @@ if __name__ == '__main__':
             output_path, '{}_{}_policy_{}.h5'.format(
                 args.rl_method, args.net, args.output_name))
 
+    common_params = {}
     list_stock_code = []
     list_chart_data = []
     list_training_data = []
@@ -97,17 +99,14 @@ if __name__ == '__main__':
             args.start_date, args.end_date, ver=args.ver)
         
         # 최소/최대 투자 단위 설정
-        min_trading_unit = max(
-            int(100000 / chart_data.iloc[-1]['close']), 1)
-        max_trading_unit = max(
-            int(1000000 / chart_data.iloc[-1]['close']), 1)
+        min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)
+        max_trading_unit = max(int(1000000 / chart_data.iloc[-1]['close']), 1)
 
         # 공통 파라미터 설정
         common_params = {'rl_method': args.rl_method, 
             'delayed_reward_threshold': args.delayed_reward_threshold,
             'net': args.net, 'num_steps': args.num_steps, 'lr': args.lr,
-            'output_path': output_path, 
-            'reuse_models': args.reuse_models}
+            'output_path': output_path, 'reuse_models': args.reuse_models}
 
         # 강화학습 시작
         learner = None
@@ -124,13 +123,11 @@ if __name__ == '__main__':
                 learner = PolicyGradientLearner(**{**common_params, 
                 'policy_network_path': policy_network_path})
             elif args.rl_method == 'ac':
-                learner = ActorCriticLearner(**{
-                    **common_params, 
+                learner = ActorCriticLearner(**{**common_params, 
                     'value_network_path': value_network_path, 
                     'policy_network_path': policy_network_path})
             elif args.rl_method == 'a2c':
-                learner = A2CLearner(**{
-                    **common_params, 
+                learner = A2CLearner(**{**common_params, 
                     'value_network_path': value_network_path, 
                     'policy_network_path': policy_network_path})
             if learner is not None:
