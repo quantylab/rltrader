@@ -114,7 +114,10 @@ def load_data(fpath, date_from, date_to, ver='v2'):
     header = None if ver == 'v1' else 0
     data = pd.read_csv(fpath, thousands=',', header=header, 
         converters={'date': lambda x: str(x)})
-    
+
+    if ver == 'v1':
+        data.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+
     # 데이터 전처리
     data = preprocess(data)
     
