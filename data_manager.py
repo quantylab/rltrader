@@ -118,6 +118,9 @@ def load_data(fpath, date_from, date_to, ver='v2'):
     if ver == 'v1':
         data.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
 
+    # 날짜 오름차순 정렬
+    data = data.sort_values(by='date')
+
     # 데이터 전처리
     data = preprocess(data)
     
