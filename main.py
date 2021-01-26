@@ -14,9 +14,9 @@ if __name__ == '__main__':
     parser.add_argument('--stock_code', nargs='+')
     parser.add_argument('--ver', choices=['v1', 'v2'], default='v2')
     parser.add_argument('--rl_method', 
-        choices=['dqn', 'pg', 'ac', 'a2c', 'a3c'])
+        choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'])
     parser.add_argument('--net', 
-        choices=['dnn', 'lstm', 'cnn'], default='dnn')
+        choices=['dnn', 'lstm', 'cnn', 'monkey'], default='dnn')
     parser.add_argument('--num_steps', type=int, default=1)
     parser.add_argument('--lr', type=float, default=0.01)
     parser.add_argument('--discount_factor', type=float, default=0.9)
@@ -63,8 +63,8 @@ if __name__ == '__main__':
         
     # 로그, Keras Backend 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
     from agent import Agent
-    from learners import DQNLearner, PolicyGradientLearner, \
-        ActorCriticLearner, A2CLearner, A3CLearner
+    from learners import ReinforcementLearner, DQNLearner, \
+        PolicyGradientLearner, ActorCriticLearner, A2CLearner, A3CLearner
 
     # 모델 경로 준비
     value_network_path = ''
@@ -130,6 +130,13 @@ if __name__ == '__main__':
                 learner = A2CLearner(**{**common_params, 
                     'value_network_path': value_network_path, 
                     'policy_network_path': policy_network_path})
+            elif args.rl_method == 'monkey':
+                args.net = args.rl_method
+                args.num_epoches = 1
+                args.discount_factor = None
+                args.start_epsilon = 1
+                args.learning = False
+                learner = ReinforcementLearner(**common_params)
             if learner is not None:
                 learner.run(balance=args.balance, 
                     num_epoches=args.num_epoches, 

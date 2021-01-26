@@ -23,7 +23,9 @@ if os.environ['KERAS_BACKEND'] == 'tensorflow':
     from tensorflow.keras.backend import set_session
     import tensorflow as tf
     graph = tf.get_default_graph()
-    sess = tf.compat.v1.Session()
+    config = tf.compat.v1.ConfigProto()
+    config.gpu_options.allow_growth = True
+    sess = tf.compat.v1.Session(config=config)
 elif os.environ['KERAS_BACKEND'] == 'plaidml.keras.backend':
     from keras.models import Model
     from keras.layers import Input, Dense, LSTM, Conv2D, \

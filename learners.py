@@ -287,6 +287,7 @@ class ReinforcementLearner:
                 self.agent.reset_exploration()
             else:
                 epsilon = start_epsilon
+                self.agent.reset_exploration(alpha=0)
 
             while True:
                 # 샘플 생성

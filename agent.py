@@ -65,8 +65,10 @@ class Agent:
         self.ratio_hold = 0
         self.ratio_portfolio_value = 0
 
-    def reset_exploration(self):
-        self.exploration_base = 0.5 + np.random.rand() / 2
+    def reset_exploration(self, alpha=None):
+        if alpha is None:
+            alpha = np.random.rand() / 2
+        self.exploration_base = 0.5 + alpha
 
     def set_balance(self, balance):
         self.initial_balance = balance
