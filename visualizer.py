@@ -106,6 +106,9 @@ class Visualizer:
                         color=color, linestyle='-')
 
             # 차트 5. 포트폴리오 가치
+            # 학습 위치 표시
+            for learning_idx in learning_idxes:
+                self.axes[4].axvline(learning_idx, color='y')
             self.axes[4].axhline(
                 initial_balance, linestyle='-', color='gray')
             self.axes[4].fill_between(x, pvs, pvs_base,
@@ -113,9 +116,6 @@ class Visualizer:
             self.axes[4].fill_between(x, pvs, pvs_base,
                 where=pvs < pvs_base, facecolor='b', alpha=0.1)
             self.axes[4].plot(x, pvs, '-k')
-            # 학습 위치 표시
-            for learning_idx in learning_idxes:
-                self.axes[4].axvline(learning_idx, color='y')
 
             # 에포크 및 탐험 비율
             self.fig.suptitle('{} \nEpoch:{}/{} e={:.2f}'.format(

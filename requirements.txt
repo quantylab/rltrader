@@ -1,4 +1,5 @@
-tensorflow-gpu==1.15
+tensorflow==2.5
 numpy
 pandas
 mplfinance
+tqdm
