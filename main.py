@@ -12,28 +12,23 @@ import data_manager
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stock_code', nargs='+')
-    parser.add_argument('--ver', choices=['v1', 'v2'], default='v2')
-    parser.add_argument('--rl_method', 
-        choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'])
-    parser.add_argument('--net', 
-        choices=['dnn', 'lstm', 'cnn', 'monkey'], default='dnn')
+    parser.add_argument('--ver', choices=['v1', 'v2', 'v3'], default='v3')
+    parser.add_argument('--rl_method', choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'])
+    parser.add_argument('--net', choices=['dnn', 'lstm', 'cnn', 'monkey'], default='dnn')
     parser.add_argument('--num_steps', type=int, default=1)
-    parser.add_argument('--lr', type=float, default=0.01)
+    parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--discount_factor', type=float, default=0.9)
     parser.add_argument('--start_epsilon', type=float, default=0)
     parser.add_argument('--balance', type=int, default=10000000)
     parser.add_argument('--num_epoches', type=int, default=100)
-    parser.add_argument('--delayed_reward_threshold', 
-        type=float, default=0.05)
-    parser.add_argument('--backend', 
-        choices=['tensorflow', 'plaidml'], default='tensorflow')
+    parser.add_argument('--backend', choices=['tensorflow', 'plaidml'], default='tensorflow')
     parser.add_argument('--output_name', default=utils.get_time_str())
     parser.add_argument('--value_network_name')
     parser.add_argument('--policy_network_name')
     parser.add_argument('--reuse_models', action='store_true')
     parser.add_argument('--learning', action='store_true')
-    parser.add_argument('--start_date', default='20170101')
-    parser.add_argument('--end_date', default='20171231')
+    parser.add_argument('--start_date', default='20200101')
+    parser.add_argument('--end_date', default='20201231')
     args = parser.parse_args()
 
     # Keras Backend 설정
@@ -70,19 +65,13 @@ if __name__ == '__main__':
     value_network_path = ''
     policy_network_path = ''
     if args.value_network_name is not None:
-        value_network_path = os.path.join(settings.BASE_DIR, 
-            'models/{}.h5'.format(args.value_network_name))
+        value_network_path = os.path.join(settings.BASE_DIR, 'models/{}.h5'.format(args.value_network_name))
     else:
-        value_network_path = os.path.join(
-            output_path, '{}_{}_value_{}.h5'.format(
-                args.rl_method, args.net, args.output_name))
+        value_network_path = os.path.join(output_path, '{}_{}_{}_value.h5'.format(args.output_name, args.rl_method, args.net))
     if args.policy_network_name is not None:
-        policy_network_path = os.path.join(settings.BASE_DIR, 
-            'models/{}.h5'.format(args.policy_network_name))
+        policy_network_path = os.path.join(settings.BASE_DIR, 'models/{}.h5'.format(args.policy_network_name))
     else:
-        policy_network_path = os.path.join(
-            output_path, '{}_{}_policy_{}.h5'.format(
-                args.rl_method, args.net, args.output_name))
+        policy_network_path = os.path.join(output_path, '{}_{}_{}_policy.h5'.format(args.output_name, args.rl_method, args.net))
 
     common_params = {}
     list_stock_code = []
@@ -94,9 +83,7 @@ if __name__ == '__main__':
     for stock_code in args.stock_code:
         # 차트 데이터, 학습 데이터 준비
         chart_data, training_data = data_manager.load_data(
-            os.path.join(settings.BASE_DIR, 
-            'data/{}/{}.csv'.format(args.ver, stock_code)), 
-            args.start_date, args.end_date, ver=args.ver)
+            stock_code, args.start_date, args.end_date, ver=args.ver)
         
         # 최소/최대 투자 단위 설정
         min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)
@@ -104,8 +91,9 @@ if __name__ == '__main__':
 
         # 공통 파라미터 설정
         common_params = {'rl_method': args.rl_method, 
-            'delayed_reward_threshold': args.delayed_reward_threshold,
             'net': args.net, 'num_steps': args.num_steps, 'lr': args.lr,
+            'balance': args.balance, 'num_epoches': args.num_epoches, 
+            'discount_factor': args.discount_factor, 'start_epsilon': args.start_epsilon,
             'output_path': output_path, 'reuse_models': args.reuse_models}
 
         # 강화학습 시작
@@ -138,11 +126,7 @@ if __name__ == '__main__':
                 args.learning = False
                 learner = ReinforcementLearner(**common_params)
             if learner is not None:
-                learner.run(balance=args.balance, 
-                    num_epoches=args.num_epoches, 
-                    discount_factor=args.discount_factor, 
-                    start_epsilon=args.start_epsilon,
-                    learning=args.learning)
+                learner.run(learning=args.learning)
                 learner.save_models()
         else:
             list_stock_code.append(stock_code)
@@ -161,10 +145,6 @@ if __name__ == '__main__':
             'list_max_trading_unit': list_max_trading_unit,
             'value_network_path': value_network_path, 
             'policy_network_path': policy_network_path})
-
-        learner.run(balance=args.balance, num_epoches=args.num_epoches, 
-                    discount_factor=args.discount_factor, 
-                    start_epsilon=args.start_epsilon,
-                    learning=args.learning)
+        learner.run(learning=args.learning)
         learner.save_models()
         
