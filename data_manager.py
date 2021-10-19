@@ -108,7 +108,7 @@ def preprocess(data, ver='v1'):
     return data
 
 
-def load_data(code, date_from, date_to, ver='v2'):
+def load_data(args, code, date_from, date_to, ver='v2'):
     if ver == 'v3':
         return load_data_v3(code, date_from, date_to)
 
