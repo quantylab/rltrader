@@ -83,7 +83,7 @@ if __name__ == '__main__':
     for stock_code in args.stock_code:
         # 차트 데이터, 학습 데이터 준비
         chart_data, training_data = data_manager.load_data(
-            stock_code, args.start_date, args.end_date, ver=args.ver)
+            args, stock_code, args.start_date, args.end_date, ver=args.ver)
         
         # 최소/최대 투자 단위 설정
         min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)
