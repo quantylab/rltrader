@@ -547,16 +547,19 @@ class A3CLearner(ReinforcementLearner):
             self.learners.append(learner)
 
     def run(self, learning=True):
+        print('self.num_epoches:', self.num_epoches)
         threads = []
         for learner in self.learners:
-            threads.append(threading.Thread(
-                target=learner.run, daemon=True, kwargs={
-                'num_epoches': self.num_epoches, 'balance': self.agent.balance,
-                'discount_factor': self.discount_factor, 
-                'start_epsilon': self.start_epsilon,
-                'learning': learning
-            }))
-        for thread in threads:
-            thread.start()
-            time.sleep(1)
-        for thread in threads: thread.join()
+            learner.run(learning=learning)
+            break
+            # threads.append(threading.Thread(
+            #     target=learner.run, daemon=True, kwargs={
+            #     'num_epoches': self.num_epoches, 'balance': self.agent.balance,
+            #     'discount_factor': self.discount_factor,
+            #     'start_epsilon': self.start_epsilon,
+            #     'learning': learning
+            # }))
+        # for thread in threads:
+        #     thread.start()
+        #     time.sleep(1)
+        # for thread in threads: thread.join()
