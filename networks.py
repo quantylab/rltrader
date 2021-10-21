@@ -176,19 +176,19 @@ class CNN(Network):
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
         output = Dropout(0.1)(output)
         output = Conv2D(64, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
         output = Dropout(0.1)(output)
         output = Conv2D(32, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
         output = Dropout(0.1)(output)
         output = Flatten()(output)
         return Model(inp, output)
