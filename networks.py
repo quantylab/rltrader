@@ -173,7 +173,7 @@ class CNN(Network):
     @staticmethod
     def get_network_head(inp):
         print('inp.shape:', inp.shape)
-        output = Conv2D(256, kernel_size=(1, 5),
+        output = Conv2D(256, kernel_size=(1, 5),strides=1
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
@@ -181,7 +181,7 @@ class CNN(Network):
         output = MaxPooling2D(pool_size=(1, 2))(output)
         print('2output.shape:', output.shape)
         output = Dropout(0.1)(output)
-        output = Conv2D(64, kernel_size=(1, 5),
+        output = Conv2D(64, kernel_size=(1, 5),strides=1
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         print('3output.shape:', output.shape)
@@ -190,7 +190,7 @@ class CNN(Network):
         output = MaxPooling2D(pool_size=(1, 2))(output)
         print('5output.shape:', output.shape)
         output = Dropout(0.1)(output)
-        output = Conv2D(32, kernel_size=(1, 5),
+        output = Conv2D(32, kernel_size=(1, 5),strides=1
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         print('6output.shape:', output.shape)
