@@ -176,22 +176,25 @@ class CNN(Network):
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
+        output = MaxPooling2D(pool_size=(1, 2), dim_ordering="th")(output)
         output = Dropout(0.1)(output)
         output = Conv2D(64, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
+        output = MaxPooling2D(pool_size=(1, 2), dim_ordering="th")(output)
         output = Dropout(0.1)(output)
         output = Conv2D(32, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2), padding='same')(output)
+        output = MaxPooling2D(pool_size=(1, 2), dim_ordering="th")(output)
         output = Dropout(0.1)(output)
         output = Flatten()(output)
-        return Model(inp, output)
+        
+        model = Model(inp, output)
+        print('[cnn]', model.summary())
+        return model
 
     def train_on_batch(self, x, y):
         x = np.array(x).reshape((-1, self.num_steps, self.input_dim, 1))
