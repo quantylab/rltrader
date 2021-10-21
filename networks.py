@@ -184,16 +184,23 @@ class CNN(Network):
         output = Conv2D(64, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
+        print('output.shape:', output.shape)
         output = BatchNormalization()(output)
+        print('output.shape:', output.shape)
         output = MaxPooling2D(pool_size=(1, 2))(output)
+        print('output.shape:', output.shape)
         output = Dropout(0.1)(output)
         output = Conv2D(32, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
+        print('output.shape:', output.shape)
         output = BatchNormalization()(output)
+        print('output.shape:', output.shape)
         output = MaxPooling2D(pool_size=(1, 2))(output)
+        print('output.shape:', output.shape)
         output = Dropout(0.1)(output)
         output = Flatten()(output)
+        print('output.shape:', output.shape)
         
         model = Model(inp, output)
         print('[cnn]', model.summary())
