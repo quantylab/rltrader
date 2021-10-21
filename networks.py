@@ -173,30 +173,30 @@ class CNN(Network):
     @staticmethod
     def get_network_head(inp):
         print('inp.shape:', inp.shape)
-        output = Conv2D(256, kernel_size=(3, 3),
+        output = Conv2D(256, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
         print('1output.shape:', output.shape)
-        output = MaxPooling2D(pool_size=(2, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2))(output)
         print('2output.shape:', output.shape)
         output = Dropout(0.1)(output)
-        output = Conv2D(128, kernel_size=(3, 3),
+        output = Conv2D(128, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         print('3output.shape:', output.shape)
         output = BatchNormalization()(output)
         print('4output.shape:', output.shape)
-        output = MaxPooling2D(pool_size=(2, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2))(output)
         print('5output.shape:', output.shape)
         output = Dropout(0.1)(output)
-        output = Conv2D(64, kernel_size=(3, 3),
+        output = Conv2D(64, kernel_size=(1, 5),
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         print('6output.shape:', output.shape)
         output = BatchNormalization()(output)
         print('7output.shape:', output.shape)
-        output = MaxPooling2D(pool_size=(2, 2))(output)
+        output = MaxPooling2D(pool_size=(1, 2))(output)
         print('8output.shape:', output.shape)
         output = Dropout(0.1)(output)
         output = Flatten()(output)
