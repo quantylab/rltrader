@@ -78,7 +78,7 @@ class Visualizer:
                         if max_actions[idx] == action:
                             self.axes[2].axvline(idx, 
                                 color=color, alpha=0.1)
-                    # 가치 신경망 출력의 tanh 그리기
+                    # 가치 신경망 출력 그리기
                     self.axes[2].plot(x, outvals_value[:, action], 
                         color=color, linestyle='-')
             

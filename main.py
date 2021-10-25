@@ -57,7 +57,6 @@ if __name__ == '__main__':
         handlers=[file_handler, stream_handler], level=logging.DEBUG)
         
     # 로그, Keras Backend 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
-    from agent import Agent
     from learners import ReinforcementLearner, DQNLearner, \
         PolicyGradientLearner, ActorCriticLearner, A2CLearner, A3CLearner
 
@@ -84,6 +83,8 @@ if __name__ == '__main__':
         # 차트 데이터, 학습 데이터 준비
         chart_data, training_data = data_manager.load_data(
             stock_code, args.start_date, args.end_date, ver=args.ver)
+
+        assert len(chart_data) >= args.num_steps
         
         # 최소/최대 투자 단위 설정
         min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)

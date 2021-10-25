@@ -392,7 +392,7 @@ class ReinforcementLearner:
             # 신경망에 의한 행동 결정
             action, confidence, _ = self.agent.decide_action(pred_value, pred_policy, 0)
             
-            result.append((action, confidence))
+            result.append((int(action), float(confidence)))
 
         return result
 
@@ -417,6 +417,7 @@ class DQNLearner(ReinforcementLearner):
             x[i] = sample
             r = self.memory_reward[-1] - reward
             y_value[i] = value
+            # Q(s,a) := Q(s,a) + alpha * (R + gamma * max(Q(s',a')))
             y_value[i, action] = r + self.discount_factor * value_max_next
             value_max_next = value.max()
         return x, y_value, None
@@ -559,4 +560,5 @@ class A3CLearner(ReinforcementLearner):
         for thread in threads:
             thread.start()
             time.sleep(1)
-        for thread in threads: thread.join()
+        for thread in threads:
+            thread.join()
