@@ -74,7 +74,7 @@ class Agent:
         self.initial_balance = balance
 
     def get_states(self):
-        if self.portfolio_value / self.environment.get_price() <= 0:
+        if self.portfolio_value / self.environment.get_price() < 1:
             print('[get_states] under zero!,val:', self.portfolio_value / self.environment.get_price(), ',portfolio_value:',self.portfolio_value,',get_price:',self.environment.get_price())
             self.ratio_hold = 0
         else:
