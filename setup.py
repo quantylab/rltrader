@@ -1,6 +1,4 @@
-from setuptools import find_packages, setup
-
-print(find_packages())
+from setuptools import find_namespace_packages, setup
 
 setup(
     name='rltrader',
@@ -9,8 +7,8 @@ setup(
     author='Quantylab',
     author_email='quantylab@gmail.com',
     url='https://github.com/quantylab/rltrader',
-    packages=['quantylab.rltrader'],
+    packages=find_namespace_packages(include=['quantylab.*']),
     install_requires=[
-        'django', 'pywinauto'
+        'tensorflow'
     ]
 )
