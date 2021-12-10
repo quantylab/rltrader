@@ -3,11 +3,12 @@ import threading
 import numpy as np
 
 
-if os.environ['KERAS_BACKEND'] == 'tensorflow':
+if os.environ.get('KERAS_BACKEND', 'tensorflow') == 'tensorflow':
     from tensorflow.keras.models import Model
     from tensorflow.keras.layers import Input, Dense, LSTM, Conv2D, \
         BatchNormalization, Dropout, MaxPooling2D, Flatten
     from tensorflow.keras.optimizers import SGD
+    from tensorflow.keras import backend
     import tensorflow as tf
     tf.compat.v1.disable_v2_behavior()
     print('Eager Mode: {}'.format(tf.executing_eagerly()))
@@ -33,7 +34,8 @@ class Network:
 
     def predict(self, sample):
         with self.lock:
-            return self.model.predict(sample).flatten()
+            pred = self.model.predict_on_batch(sample).flatten()
+            return pred
 
     def train_on_batch(self, x, y):
         loss = 0.
@@ -60,6 +62,10 @@ class Network:
         elif net == 'cnn':
             return CNN.get_network_head(
                 Input((1, num_steps, input_dim)))
+    
+    @classmethod
+    def clear_session():
+        backend.clear_session()
 
 
 class DNN(Network):

@@ -4,15 +4,15 @@ import logging
 import argparse
 import json
 
-import settings
-import utils
+from quantylab.rltrader import settings
+from quantylab.rltrader import utils
 import data_manager
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--stock_code', nargs='+')
-    parser.add_argument('--ver', choices=['v1', 'v2', 'v3'], default='v3')
+    parser.add_argument('--ver', choices=['v1', 'v2', 'v3', 'v4'], default='v3')
     parser.add_argument('--rl_method', choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'])
     parser.add_argument('--net', choices=['dnn', 'lstm', 'cnn', 'monkey'], default='dnn')
     parser.add_argument('--num_steps', type=int, default=1)
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     stream_handler.setLevel(logging.INFO)
     logging.basicConfig(format="%(message)s",
         handlers=[file_handler, stream_handler], level=logging.DEBUG)
-        
+    
     # 로그, Keras Backend 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
-    from learners import ReinforcementLearner, DQNLearner, \
+    from quantylab.rltrader.learners import ReinforcementLearner, DQNLearner, \
         PolicyGradientLearner, ActorCriticLearner, A2CLearner, A3CLearner
 
     # 모델 경로 준비
@@ -107,10 +107,10 @@ if __name__ == '__main__':
                 'max_trading_unit': max_trading_unit})
             if args.rl_method == 'dqn':
                 learner = DQNLearner(**{**common_params, 
-                'value_network_path': value_network_path})
+                    'value_network_path': value_network_path})
             elif args.rl_method == 'pg':
                 learner = PolicyGradientLearner(**{**common_params, 
-                'policy_network_path': policy_network_path})
+                    'policy_network_path': policy_network_path})
             elif args.rl_method == 'ac':
                 learner = ActorCriticLearner(**{**common_params, 
                     'value_network_path': value_network_path, 

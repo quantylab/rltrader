@@ -59,6 +59,23 @@ PATH
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\bin
 C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\libnvvp
 
+# 실행
+
+- `run_e3.cmd`
+
+# 학습데이터
+
+[퀀티랩 네이버 카페](https://cafe.naver.com/quantylab)에서 데이터 다운받을 수 있습니다. RLTrader 학습데이터 메뉴를 확인해 주세요.
+
+## v3
+
+- 종목 데이터: date,open,high,low,close,volume,per,pbr,roe,open_lastclose_ratio,high_close_ratio,low_close_ratio,diffratio,volume_lastvolume_ratio,close_ma5_ratio,volume_ma5_ratio,close_ma10_ratio,volume_ma10_ratio,close_ma20_ratio,volume_ma20_ratio,close_ma60_ratio,volume_ma60_ratio,close_ma120_ratio,volume_ma120_ratio,ind,ind_diff,ind_ma5,ind_ma10,ind_ma20,ind_ma60,ind_ma120,inst,inst_diff,inst_ma5,inst_ma10,inst_ma20,inst_ma60,inst_ma120,foreign,foreign_diff,foreign_ma5,foreign_ma10,foreign_ma20,foreign_ma60,foreign_ma120
+- 시장 데이터: date, market_kospi_ma5_ratio,market_kospi_ma20_ratio,market_kospi_ma60_ratio,market_kospi_ma120_ratio,bond_k3y_ma5_ratio,bond_k3y_ma20_ratio,bond_k3y_ma60_ratio,bond_k3y_ma120_ratio
+
+시장 데이터와 종목 데이터를 합하여 사용하면 됩니다. `data_manager.py`를 참고해 주세요.
+
+## v4
+
 # 프로파일링
 - `python -m cProfile -o profile.pstats main.py ...`
 - `python profile.py`

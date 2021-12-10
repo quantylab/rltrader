@@ -109,6 +109,7 @@ venv.bak/
 /.idea/
 /.vscode/
 /data/v3/
+/data/v4/
 /nb/
 note.md
 /models/

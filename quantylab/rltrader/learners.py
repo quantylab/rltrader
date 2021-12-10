@@ -6,11 +6,12 @@ import threading
 import time
 import numpy as np
 from tqdm import tqdm
-from utils import sigmoid
-from environment import Environment
-from agent import Agent
-from networks import Network, DNN, LSTMNetwork, CNN
-from visualizer import Visualizer
+
+from quantylab.rltrader.utils import sigmoid
+from quantylab.rltrader.environment import Environment
+from quantylab.rltrader.agent import Agent
+from quantylab.rltrader.networks import Network, DNN, LSTMNetwork, CNN
+from quantylab.rltrader.visualizer import Visualizer
 
 
 class ReinforcementLearner:
@@ -70,7 +71,6 @@ class ReinforcementLearner:
         self.memory_pv = []
         self.memory_num_stocks = []
         self.memory_exp_idx = []
-        self.memory_learning_idx = []
         # 에포크 관련 정보
         self.loss = 0.
         self.itr_cnt = 0
@@ -80,8 +80,10 @@ class ReinforcementLearner:
         # 로그 등 출력 경로
         self.output_path = output_path
 
-    def init_value_network(self, shared_network=None, 
-            activation='linear', loss='mse'):
+        # 반복적으로 강화학습을 수행할때 발생하는 Memory Leak 방지
+        Network.clear_session
+
+    def init_value_network(self, shared_network=None, activation='linear', loss='mse'):
         if self.net == 'dnn':
             self.value_network = DNN(
                 input_dim=self.num_features, 
@@ -103,10 +105,9 @@ class ReinforcementLearner:
                 shared_network=shared_network, 
                 activation=activation, loss=loss)
         if self.reuse_models and os.path.exists(self.value_network_path):
-                self.value_network.load_model(model_path=self.value_network_path)
+            self.value_network.load_model(model_path=self.value_network_path)
 
-    def init_policy_network(self, shared_network=None, 
-            activation='sigmoid', loss='binary_crossentropy'):
+    def init_policy_network(self, shared_network=None, activation='sigmoid', loss='binary_crossentropy'):
         if self.net == 'dnn':
             self.policy_network = DNN(
                 input_dim=self.num_features, 
@@ -148,7 +149,6 @@ class ReinforcementLearner:
         self.memory_pv = []
         self.memory_num_stocks = []
         self.memory_exp_idx = []
-        self.memory_learning_idx = []
         # 에포크 관련 정보 초기화
         self.loss = 0.
         self.itr_cnt = 0
@@ -189,7 +189,6 @@ class ReinforcementLearner:
         if _loss is not None:
             self.loss += abs(_loss)
             self.learning_cnt += 1
-            self.memory_learning_idx.append(self.training_data_idx)
 
     def visualize(self, epoch_str, num_epoches, epsilon):
         self.memory_action = [Agent.ACTION_HOLD] * (self.num_steps - 1) + self.memory_action
@@ -207,7 +206,6 @@ class ReinforcementLearner:
             outvals_value=self.memory_value, 
             outvals_policy=self.memory_policy,
             exps=self.memory_exp_idx, 
-            learning_idxes=self.memory_learning_idx,
             initial_balance=self.agent.initial_balance, 
             pvs=self.memory_pv,
         )

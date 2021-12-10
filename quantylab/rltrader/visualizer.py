@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 plt.switch_backend('agg')
 
 from mplfinance.original_flavor import candlestick_ohlc
-from agent import Agent
+from quantylab.rltrader.agent import Agent
 
 lock = threading.Lock()
 
@@ -51,7 +51,7 @@ class Visualizer:
     def plot(self, epoch_str=None, num_epoches=None, epsilon=None,
             action_list=None, actions=None, num_stocks=None,
             outvals_value=[], outvals_policy=[], exps=None, 
-            learning_idxes=None, initial_balance=None, pvs=None):
+            initial_balance=None, pvs=None):
         with lock:
             x = np.arange(len(actions))  # 모든 차트가 공유할 x축 데이터
             actions = np.array(actions)  # 에이전트의 행동 배열
@@ -76,8 +76,7 @@ class Visualizer:
                     # 배경 그리기
                     for idx in x:
                         if max_actions[idx] == action:
-                            self.axes[2].axvline(idx, 
-                                color=color, alpha=0.1)
+                            self.axes[2].axvline(idx, color=color, alpha=0.1)
                     # 가치 신경망 출력 그리기
                     self.axes[2].plot(x, outvals_value[:, action], 
                         color=color, linestyle='-')
@@ -87,16 +86,17 @@ class Visualizer:
             for exp_idx in exps:
                 self.axes[3].axvline(exp_idx, color='y')
             # 행동을 배경으로 그리기
-            _outvals = outvals_policy if len(outvals_policy) > 0 \
-                else outvals_value
+            _outvals = outvals_policy if len(outvals_policy) > 0 else outvals_value
             for idx, outval in zip(x, _outvals):
                 color = 'white'
                 if np.isnan(outval.max()):
                     continue
                 if outval.argmax() == Agent.ACTION_BUY:
-                    color = 'r'  # 매수 빨간색
+                    color = self.COLORS[0]  # 매수 빨간색
                 elif outval.argmax() == Agent.ACTION_SELL:
-                    color = 'b'  # 매도 파란색
+                    color = self.COLORS[1]  # 매도 파란색
+                elif outval.argmax() == Agent.ACTION_HOLD:
+                    color = self.COLORS[2]  # 홀딩 초록색
                 self.axes[3].axvline(idx, color=color, alpha=0.1)
             # 정책 신경망의 출력 그리기
             if len(outvals_policy) > 0:
@@ -106,9 +106,6 @@ class Visualizer:
                         color=color, linestyle='-')
 
             # 차트 5. 포트폴리오 가치
-            # 학습 위치 표시
-            for learning_idx in learning_idxes:
-                self.axes[4].axvline(learning_idx, color='y')
             self.axes[4].axhline(
                 initial_balance, linestyle='-', color='gray')
             self.axes[4].fill_between(x, pvs, pvs_base,
