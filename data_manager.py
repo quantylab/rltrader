@@ -234,8 +234,14 @@ def load_data(code, date_from, date_to, ver='v2'):
 
 
 def load_data_v3_v4(code, date_from, date_to, ver):
+    columns = None
+    if ver == 'v3':
+        columns = COLUMNS_TRAINING_DATA_V3
+    elif ver == 'v4':
+        columns = COLUMNS_TRAINING_DATA_V4
+
     # 시장 데이터
-    df_marketfeatures = pd.read_csv(os.path.join(settings.BASE_DIR, 'data', ver, 'marketfeatures.csv'))
+    df_marketfeatures = pd.read_csv(os.path.join(settings.BASE_DIR, 'data', ver, 'marketfeatures.csv'), thousands=',', header=0, converters={'date': lambda x: str(x)})
     
     # 종목 데이터
     df_stockfeatures = None
@@ -253,7 +259,7 @@ def load_data_v3_v4(code, date_from, date_to, ver):
 
     # 표준화
     scaler = StandardScaler()
-    scaler.fit(df[COLUMNS_TRAINING_DATA_V4].dropna().values)
+    scaler.fit(df[columns].dropna().values)
 
     # 기간 필터링
     df['date'] = df['date'].str.replace('-', '')
@@ -264,7 +270,7 @@ def load_data_v3_v4(code, date_from, date_to, ver):
     chart_data = df[COLUMNS_CHART_DATA]
 
     # 학습 데이터 분리
-    training_data = df[COLUMNS_TRAINING_DATA_V4]
-    training_data = pd.DataFrame(scaler.transform(training_data.values), columns=COLUMNS_TRAINING_DATA_V4)
+    training_data = df[columns]
+    training_data = pd.DataFrame(scaler.transform(training_data.values), columns=columns)
     
     return chart_data, training_data
