@@ -45,7 +45,7 @@ conda install cudnn=7.3.1
 pip install numpy
 pip install pandas
 
-### TF 2.5
+## TF 2.5
 https://www.tensorflow.org/install/source_windows?hl=en#gpu
 
 conda create -n rltrader2 python=3.6
@@ -80,14 +80,14 @@ C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\libnvvp
 - `python -m cProfile -o profile.pstats main.py ...`
 - `python profile.py`
 
-## Troubleshooting
+# Troubleshooting
 
-### TF 1.15에서 다음 에러가 나면 Python 3.6으로 맞춰준다.
+## TF 1.15에서 다음 에러가 나면 Python 3.6으로 맞춰준다.
 ```
 NotImplementedError: Cannot convert a symbolic Tensor (lstm/strided_slice:0) to a numpy array.
 ```
 
-### original_keras_version = f.attrs['keras_version'].decode('utf8') AttributeError: 'str' object has no attribute 'decode'
+## original_keras_version = f.attrs['keras_version'].decode('utf8') AttributeError: 'str' object has no attribute 'decode'
 ```
 https://github.com/keras-team/keras/issues/14265
 https://pypi.org/project/h5py/#history
