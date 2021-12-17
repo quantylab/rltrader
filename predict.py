@@ -2,11 +2,9 @@ import os
 import sys
 import logging
 import argparse
-import json
 
-import settings
-import utils
-import data_manager
+from quantylab.rltrader import settings
+from quantylab.rltrader import data_manager
 
 
 if __name__ == '__main__':
@@ -37,7 +35,7 @@ if __name__ == '__main__':
         handlers=[stream_handler], level=logging.DEBUG)
     
     # 로그, Keras Backend 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
-    from learners import DQNLearner, PolicyGradientLearner, ActorCriticLearner, A2CLearner
+    from quantylab.rltrader.learners import DQNLearner, PolicyGradientLearner, ActorCriticLearner, A2CLearner
 
     # 모델 경로 준비
     value_network_path = ''
