@@ -29,6 +29,7 @@ if __name__ == '__main__':
     parser.add_argument('--learning', action='store_true')
     parser.add_argument('--start_date', default='20200101')
     parser.add_argument('--end_date', default='20201231')
+    parser.add_argument('--action', choices=['train', 'predict'], default='train')
     args = parser.parse_args()
 
     # Backend 설정
@@ -129,9 +130,6 @@ if __name__ == '__main__':
                 args.start_epsilon = 1
                 args.learning = False
                 learner = ReinforcementLearner(**common_params)
-            if learner is not None:
-                learner.run(learning=args.learning)
-                learner.save_models()
         else:
             list_stock_code.append(stock_code)
             list_chart_data.append(chart_data)
@@ -149,6 +147,12 @@ if __name__ == '__main__':
             'list_max_trading_unit': list_max_trading_unit,
             'value_network_path': value_network_path, 
             'policy_network_path': policy_network_path})
+    
+    assert learner is not None
+
+    if args.action == 'train':
         learner.run(learning=args.learning)
         learner.save_models()
-        
+    elif args.action == 'predict':
+        pred = learner.predict(balance=args.balance)
+        print(pred)
