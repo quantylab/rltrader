@@ -3,14 +3,13 @@ import threading
 import numpy as np
 
 
-if os.environ['KERAS_BACKEND'] == 'tensorflow':
+if os.environ.get('KERAS_BACKEND', 'tensorflow') == 'tensorflow':
     from tensorflow.keras.models import Model
     from tensorflow.keras.layers import Input, Dense, LSTM, Conv2D, \
         BatchNormalization, Dropout, MaxPooling2D, Flatten
     from tensorflow.keras.optimizers import SGD
-    import tensorflow as tf
-    tf.compat.v1.disable_v2_behavior()
-    print('Eager Mode: {}'.format(tf.executing_eagerly()))
+    from tensorflow.keras import backend
+    os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 elif os.environ['KERAS_BACKEND'] == 'plaidml.keras.backend':
     from keras.models import Model
     from keras.layers import Input, Dense, LSTM, Conv2D, \
@@ -33,7 +32,8 @@ class Network:
 
     def predict(self, sample):
         with self.lock:
-            return self.model.predict(sample).flatten()
+            pred = self.model.predict_on_batch(sample).flatten()
+            return pred
 
     def train_on_batch(self, x, y):
         loss = 0.
@@ -51,16 +51,14 @@ class Network:
             self.model.load_weights(model_path)
 
     @classmethod
-    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0):
+    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0, output_dim=0):
         if net == 'dnn':
             return DNN.get_network_head(Input((input_dim,)))
         elif net == 'lstm':
-            return LSTMNetwork.get_network_head(
-                Input((num_steps, input_dim)))
+            return LSTMNetwork.get_network_head(Input((num_steps, input_dim)))
         elif net == 'cnn':
-            return CNN.get_network_head(
-                Input((1, num_steps, input_dim)))
-
+            return CNN.get_network_head(Input((1, num_steps, input_dim)))
+    
 
 class DNN(Network):
     def __init__(self, *args, **kwargs):
@@ -132,13 +130,13 @@ class LSTMNetwork(Network):
     def get_network_head(inp):
         # cuDNN 사용을 위한 조건
         # https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-        output = LSTM(256, dropout=0.1, return_sequences=True, stateful=False, kernel_initializer='random_normal')(inp)
+        output = LSTM(256, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
-        output = LSTM(128, dropout=0.1, return_sequences=True, stateful=False, kernel_initializer='random_normal')(output)
+        output = LSTM(128, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = LSTM(64, dropout=0.1, return_sequences=True, stateful=False, kernel_initializer='random_normal')(output)
+        output = LSTM(64, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = LSTM(32, dropout=0.1, stateful=False, kernel_initializer='random_normal')(output)
+        output = LSTM(32, dropout=0.1, kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         return Model(inp, output)
 
