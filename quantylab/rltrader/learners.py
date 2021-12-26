@@ -11,7 +11,7 @@ from quantylab.rltrader.environment import Environment
 from quantylab.rltrader.agent import Agent
 
 if os.environ.get('RLTRADER_BACKEND', 'pytorch') == 'pytorch':
-    from quantylab.rltrader.networks_pytorch import Network, DNN, LSTMNetwork, CNN, Q3
+    from quantylab.rltrader.networks_pytorch import Network, DNN, LSTMNetwork, CNN
 else:
     from quantylab.rltrader.networks_keras import Network, DNN, LSTMNetwork, CNN
 from quantylab.rltrader.visualizer import Visualizer
@@ -25,8 +25,8 @@ class ReinforcementLearner:
                 chart_data=None, training_data=None,
                 min_trading_unit=1, max_trading_unit=2, 
                 net='dnn', num_steps=1, lr=0.001, 
-                discount_factor=0.9, num_epoches=100,
-                balance=10000000, start_epsilon=1,
+                discount_factor=0.9, num_epoches=1000,
+                balance=100000000, start_epsilon=1,
                 value_network=None, policy_network=None,
                 output_path='', reuse_models=True):
         # 인자 확인
@@ -87,28 +87,21 @@ class ReinforcementLearner:
             self.value_network = DNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, shared_network=shared_network, 
+                lr=self.lr, shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'lstm':
             self.value_network = LSTMNetwork(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'cnn':
             self.value_network = CNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
-                activation=activation, loss=loss)
-        elif self.net == 'q3':
-            self.value_network = Q3(
-                input_dim=self.num_features, 
-                output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         if self.reuse_models and os.path.exists(self.value_network_path):
             self.value_network.load_model(model_path=self.value_network_path)
@@ -118,28 +111,21 @@ class ReinforcementLearner:
             self.policy_network = DNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, shared_network=shared_network, 
+                lr=self.lr, shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'lstm':
             self.policy_network = LSTMNetwork(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'cnn':
             self.policy_network = CNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
-                activation=activation, loss=loss)
-        elif self.net == 'q3':
-            self.policy_network = Q3(
-                input_dim=self.num_features, 
-                output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         if self.reuse_models and os.path.exists(self.policy_network_path):
             self.policy_network.load_model(model_path=self.policy_network_path)
@@ -218,20 +204,12 @@ class ReinforcementLearner:
             initial_balance=self.agent.initial_balance, 
             pvs=self.memory_pv,
         )
-        self.visualizer.save(os.path.join(
-            self.epoch_summary_dir, 
-            'epoch_summary_{}.png'.format(epoch_str))
-        )
+        self.visualizer.save(os.path.join(self.epoch_summary_dir, f'epoch_summary_{epoch_str}.png'))
 
     def run(self, learning=True):
         info = (
-            "[{code}] RL:{rl} Net:{net} LR:{lr} "
-            "DF:{discount_factor} TU:[{min_trading_unit},{max_trading_unit}]"
-        ).format(
-            code=self.stock_code, rl=self.rl_method, net=self.net,
-            lr=self.lr, discount_factor=self.discount_factor,
-            min_trading_unit=self.agent.min_trading_unit, 
-            max_trading_unit=self.agent.max_trading_unit,
+            f'[{self.stock_code}] RL:{self.rl_method} Net:{self.net} LR:{self.lr} '
+            f'DF:{self.discount_factor} TU:[{self.agent.min_trading_unit},{self.agent.max_trading_unit}]'
         )
         with self.lock:
             logging.info(info)
@@ -244,8 +222,7 @@ class ReinforcementLearner:
         self.visualizer.prepare(self.environment.chart_data, info)
 
         # 가시화 결과 저장할 폴더 준비
-        self.epoch_summary_dir = os.path.join(
-            self.output_path, 'epoch_summary_{}'.format(self.stock_code))
+        self.epoch_summary_dir = os.path.join(self.output_path, 'epoch_summary')
         if not os.path.isdir(self.epoch_summary_dir):
             os.makedirs(self.epoch_summary_dir)
         else:
@@ -324,18 +301,13 @@ class ReinforcementLearner:
             epoch_str = str(epoch + 1).rjust(num_epoches_digit, '0')
             time_end_epoch = time.time()
             elapsed_time_epoch = time_end_epoch - time_start_epoch
-            logging.info("[{}][Epoch {}/{}] Epsilon:{:.4f} "
-                "#Expl.:{}/{} #Buy:{} #Sell:{} #Hold:{} "
-                "#Stocks:{} PV:{:,.0f} "
-                "Loss:{:.6f} ET:{:.4f}".format(
-                    self.stock_code, epoch_str, self.num_epoches, epsilon, 
-                    self.exploration_cnt, self.itr_cnt,
-                    self.agent.num_buy, self.agent.num_sell, self.agent.num_hold,
-                    self.agent.num_stocks, self.agent.portfolio_value, 
-                    self.loss, elapsed_time_epoch))
+            logging.info(f'[{self.stock_code}][Epoch {epoch_str}/{self.num_epoches}] Epsilon:{epsilon:.4f} '
+                f'#Expl.:{self.exploration_cnt}/{self.itr_cnt} #Buy:{self.agent.num_buy} #Sell:{self.agent.num_sell} #Hold:{self.agent.num_hold} '
+                f'#Stocks:{self.agent.num_stocks} PV:{self.agent.portfolio_value:,.0f} '
+                f'Loss:{self.loss:.6f} ET:{elapsed_time_epoch:.4f}')
 
             # 에포크 관련 정보 가시화
-            if self.num_epoches == 1 or (epoch + 1) % 10 == 0:
+            if self.num_epoches == 1 or (epoch + 1) % int(self.num_epoches / 10) == 0:
                 self.visualize(epoch_str, self.num_epoches, epsilon)
 
             # 학습 관련 정보 갱신
@@ -350,10 +322,8 @@ class ReinforcementLearner:
 
         # 학습 관련 정보 로그 기록
         with self.lock:
-            logging.info("[{code}] Elapsed Time:{elapsed_time:.4f} "
-                "Max PV:{max_pv:,.0f} #Win:{cnt_win}".format(
-                code=self.stock_code, elapsed_time=elapsed_time, 
-                max_pv=max_portfolio_value, cnt_win=epoch_win_cnt))
+            logging.info(f'[{self.stock_code}] Elapsed Time:{elapsed_time:.4f} '
+                f'Max PV:{max_portfolio_value:,.0f} #Win:{epoch_win_cnt}')
 
     def save_models(self):
         if self.value_network is not None and self.value_network_path is not None:
@@ -443,6 +413,7 @@ class PolicyGradientLearner(ReinforcementLearner):
         for i, (sample, action, policy, reward) in enumerate(memory):
             x[i] = sample
             r = self.memory_reward[-1] - reward
+            y_policy[i, :] = policy
             y_policy[i, action] = 1 if r > 0 else 0
         return x, None, y_policy
 
@@ -454,8 +425,7 @@ class ActorCriticLearner(ReinforcementLearner):
         if shared_network is None:
             self.shared_network = Network.get_shared_network(
                 net=self.net, num_steps=self.num_steps, 
-                input_dim=self.num_features,
-                output_dim=self.agent.NUM_ACTIONS)
+                input_dim=self.num_features)
         else:
             self.shared_network = shared_network
         self.value_network_path = value_network_path
@@ -480,7 +450,9 @@ class ActorCriticLearner(ReinforcementLearner):
         for i, (sample, action, value, policy, reward) in enumerate(memory):
             x[i] = sample
             r = self.memory_reward[-1] - reward
+            y_value[i, :] = value
             y_value[i, action] = r + self.discount_factor * value_max_next
+            y_policy[i, :] = policy
             y_policy[i, action] = 1 if r > 0 else 0
             value_max_next = value.max()
         return x, y_value, y_policy
@@ -505,8 +477,10 @@ class A2CLearner(ActorCriticLearner):
         for i, (sample, action, value, policy, reward) in enumerate(memory):
             x[i] = sample
             r = self.memory_reward[-1] - reward
+            y_value[i, :] = value
             y_value[i, action] = r + self.discount_factor * value_max_next
             advantage = y_value[i, action] - y_value[i].mean()
+            y_policy[i, :] = policy
             y_policy[i, action] = 1 if advantage > 0 else 0
             value_max_next = value.max()
         return x, y_value, y_policy

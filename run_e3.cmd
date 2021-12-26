@@ -17,18 +17,17 @@ for %%c in (005930 035720 051910 005380 068270 005490) do (
             set /A s=1
         )
 
-        @REM train (201901~202012)
-        python main.py --ver v3 --stock_code %%c --rl_method a2c --net %%n --num_steps !s! --output_name %%c_train --learning --num_epoches 100 --lr 0.001 --discount_factor 0.9 --start_epsilon 1 --start_date 20190101 --end_date 20201231
-        copy output\%%c_train_a2c_%%n\%%c_train_a2c_%%n_value.h5 models\
-        copy output\%%c_train_a2c_%%n\%%c_train_a2c_%%n_policy.h5 models\
+        @REM train
+        python main.py --action train --ver v3 --name %%c --stock_code %%c --rl_method a2c --net %%n --start_date 20190101 --end_date 20201231
 
         @REM test
-        python main.py --ver v3 --stock_code %%c --rl_method a2c --net %%n --num_steps !s! --output_name %%c_test --num_epoches 1 --start_epsilon 0 --start_date 20210101 --end_date 20210630 --reuse_models --value_network_name %%c_train_a2c_%%n_value --policy_network_name %%c_train_a2c_%%n_policy
+        python main.py --action test --ver v3 --name %%c --stock_code %%c --rl_method a2c --net %%n --start_date 20210101 --end_date 20210630
 
         @REM predict
-        python main.py --ver v3 --stock_code %%c --rl_method a2c --net %%n --num_steps !s! --output_name %%c_predict --start_date 20211001 --end_date 20211031 --value_network_name %%c_train_a2c_%%n_value --policy_network_name %%c_train_a2c_%%n_policy --action predict
+        python main.py --action predict --ver v3 --name %%c --stock_code %%c --rl_method a2c --net %%n --start_date 20211001 --end_date 20211031
 
         @REM update
-        python main.py --ver v3 --stock_code %%c --rl_method a2c --net %%n --num_steps !s! --output_name %%c_update --num_epoches 50 --start_epsilon 1 --start_date 20210101 --end_date 20210630 --reuse_models --value_network_name %%c_train_a2c_%%n_value --policy_network_name %%c_train_a2c_%%n_policy --learning
+        python main.py --action update --ver v3 --name %%c --stock_code %%c --rl_method a2c --net %%n --start_date 20210101 --end_date 20210630
     )
 )
+

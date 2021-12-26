@@ -5,15 +5,15 @@ import numpy as np
 
 if os.environ.get('KERAS_BACKEND', 'tensorflow') == 'tensorflow':
     from tensorflow.keras.models import Model
-    from tensorflow.keras.layers import Input, Dense, LSTM, Conv2D, \
-        BatchNormalization, Dropout, MaxPooling2D, Flatten
+    from tensorflow.keras.layers import Input, Dense, LSTM, Conv1D, \
+        BatchNormalization, Dropout, MaxPooling1D, Flatten
     from tensorflow.keras.optimizers import SGD
     from tensorflow.keras import backend
     os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2'
 elif os.environ['KERAS_BACKEND'] == 'plaidml.keras.backend':
     from keras.models import Model
-    from keras.layers import Input, Dense, LSTM, Conv2D, \
-        BatchNormalization, Dropout, MaxPooling2D, Flatten
+    from keras.layers import Input, Dense, LSTM, Conv1D, \
+        BatchNormalization, Dropout, MaxPooling1D, Flatten
     from keras.optimizers import SGD
 
 
@@ -51,13 +51,13 @@ class Network:
             self.model.load_weights(model_path)
 
     @classmethod
-    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0, output_dim=0):
+    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0):
         if net == 'dnn':
             return DNN.get_network_head(Input((input_dim,)))
         elif net == 'lstm':
             return LSTMNetwork.get_network_head(Input((num_steps, input_dim)))
         elif net == 'cnn':
-            return CNN.get_network_head(Input((1, num_steps, input_dim)))
+            return CNN.get_network_head(Input((num_steps, input_dim)))
     
 
 class DNN(Network):
@@ -170,23 +170,23 @@ class CNN(Network):
 
     @staticmethod
     def get_network_head(inp):
-        output = Conv2D(256, kernel_size=(1, 5),
+        output = Conv1D(256, kernel_size=5,
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling1D(pool_size=2, padding='same')(output)
         output = Dropout(0.1)(output)
-        output = Conv2D(64, kernel_size=(1, 5),
+        output = Conv1D(64, kernel_size=5,
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling1D(pool_size=2, padding='same')(output)
         output = Dropout(0.1)(output)
-        output = Conv2D(32, kernel_size=(1, 5),
+        output = Conv1D(32, kernel_size=5,
             padding='same', activation='sigmoid',
             kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = MaxPooling2D(pool_size=(1, 2))(output)
+        output = MaxPooling1D(pool_size=2, padding='same')(output)
         output = Dropout(0.1)(output)
         output = Flatten()(output)
         return Model(inp, output)

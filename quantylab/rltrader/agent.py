@@ -40,7 +40,6 @@ class Agent:
         self.num_buy = 0  # 매수 횟수
         self.num_sell = 0  # 매도 횟수
         self.num_hold = 0  # 홀딩 횟수
-        self.immediate_reward = 0  # 즉시 보상
 
         # Agent 클래스의 상태
         self.ratio_hold = 0  # 주식 보유 비율
@@ -54,7 +53,6 @@ class Agent:
         self.num_buy = 0
         self.num_sell = 0
         self.num_hold = 0
-        self.immediate_reward = 0
         self.ratio_hold = 0
         self.profitloss = 0
         self.avg_buy_price = 0
@@ -130,9 +128,6 @@ class Agent:
 
         # 환경에서 현재 가격 얻기
         curr_price = self.environment.get_price()
-
-        # 즉시 보상 초기화
-        self.immediate_reward = 0
 
         # 매수
         if action == Agent.ACTION_BUY:
