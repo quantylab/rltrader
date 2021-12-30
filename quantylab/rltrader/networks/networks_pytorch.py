@@ -3,7 +3,6 @@ import abc
 import numpy as np
 
 import torch
-from torch.nn.modules import dropout
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -50,10 +49,10 @@ class Network:
             self.model.add_module('activation', torch.nn.Tanh())
         elif self.activation == 'softmax':
             self.model.add_module('activation', torch.nn.Softmax(dim=1))
-        # self.model.apply(Network.init_weights)
+        self.model.apply(Network.init_weights)
         self.model.to(device)
 
-        self.optimizer = torch.optim.Adam(self.model.parameters(), lr=self.lr)
+        self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=self.lr)
         self.criterion = None
         if loss == 'mse':
             self.criterion = torch.nn.MSELoss()
@@ -103,11 +102,11 @@ class Network:
     @staticmethod
     def init_weights(m):
         if isinstance(m, torch.nn.Linear) or isinstance(m, torch.nn.Conv1d):
-            torch.nn.init.normal_(m.weight, std=0.05)
+            torch.nn.init.normal_(m.weight, std=0.01)
         elif isinstance(m, torch.nn.LSTM):
             for weights in m.all_weights:
                 for weight in weights:
-                    torch.nn.init.normal_(weight, std=0.05)
+                    torch.nn.init.normal_(weight, std=0.01)
     
     @abc.abstractmethod
     def get_network_head(inp, output_dim):
@@ -151,6 +150,7 @@ class LSTMNetwork(Network):
     def get_network_head(inp, output_dim):
         return torch.nn.Sequential(
             torch.nn.BatchNorm1d(inp[0]),
+            # LSTMModule(inp[1], 64, 2, dropout=0.1, batch_first=True, use_last_only=True),
             LSTMModule(inp[1], 128, batch_first=True, use_last_only=True),
             torch.nn.BatchNorm1d(128),
             torch.nn.Dropout(p=0.1),
@@ -182,14 +182,17 @@ class CNN(Network):
         kernel_size = 2
         return torch.nn.Sequential(
             torch.nn.BatchNorm1d(inp[0]),
-            torch.nn.Conv1d(inp[0], 5, kernel_size),
-            torch.nn.BatchNorm1d(5),
-            torch.nn.Dropout(p=0.1),
-            torch.nn.Conv1d(5, 1, kernel_size),
+            torch.nn.Conv1d(inp[0], 1, kernel_size),
             torch.nn.BatchNorm1d(1),
             torch.nn.Flatten(),
             torch.nn.Dropout(p=0.1),
-            torch.nn.Linear(inp[1] - (kernel_size - 1) * 2, 32),
+            torch.nn.Linear(inp[1] - (kernel_size - 1) * 2, 128),
+            torch.nn.BatchNorm1d(128),
+            torch.nn.Dropout(p=0.1),
+            torch.nn.Linear(128, 64),
+            torch.nn.BatchNorm1d(64),
+            torch.nn.Dropout(p=0.1),
+            torch.nn.Linear(64, 32),
             torch.nn.BatchNorm1d(32),
             torch.nn.Dropout(p=0.1),
             torch.nn.Linear(32, output_dim),

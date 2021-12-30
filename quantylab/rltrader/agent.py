@@ -117,10 +117,10 @@ class Agent:
     def decide_trading_unit(self, confidence):
         if np.isnan(confidence):
             return self.min_trading_unit
-        added_trading = max(min(
+        added_trading_unit = max(min(
             int(confidence * (self.max_trading_unit - self.min_trading_unit)),
             self.max_trading_unit-self.min_trading_unit), 0)
-        return self.min_trading_unit + added_trading
+        return self.min_trading_unit + added_trading_unit
 
     def act(self, action, confidence):
         if not self.validate_action(action):

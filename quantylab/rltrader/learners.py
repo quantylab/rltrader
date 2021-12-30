@@ -10,10 +10,7 @@ from tqdm import tqdm
 from quantylab.rltrader.environment import Environment
 from quantylab.rltrader.agent import Agent
 
-if os.environ.get('RLTRADER_BACKEND', 'pytorch') == 'pytorch':
-    from quantylab.rltrader.networks_pytorch import Network, DNN, LSTMNetwork, CNN
-else:
-    from quantylab.rltrader.networks_keras import Network, DNN, LSTMNetwork, CNN
+from quantylab.rltrader.networks import Network, DNN, LSTMNetwork, CNN
 from quantylab.rltrader.visualizer import Visualizer
 
 
@@ -425,7 +422,8 @@ class ActorCriticLearner(ReinforcementLearner):
         if shared_network is None:
             self.shared_network = Network.get_shared_network(
                 net=self.net, num_steps=self.num_steps, 
-                input_dim=self.num_features)
+                input_dim=self.num_features,
+                output_dim=self.agent.NUM_ACTIONS)
         else:
             self.shared_network = shared_network
         self.value_network_path = value_network_path

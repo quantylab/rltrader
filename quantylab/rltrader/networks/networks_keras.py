@@ -51,7 +51,8 @@ class Network:
             self.model.load_weights(model_path)
 
     @classmethod
-    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0):
+    def get_shared_network(cls, net='dnn', num_steps=1, input_dim=0, output_dim=0):
+        # output_dim은 pytorch에서 필요
         if net == 'dnn':
             return DNN.get_network_head(Input((input_dim,)))
         elif net == 'lstm':

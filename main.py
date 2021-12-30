@@ -21,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--start_date', default='20200101')
     parser.add_argument('--end_date', default='20201231')
     parser.add_argument('--lr', type=float, default=0.0001)
-    parser.add_argument('--discount_factor', type=float, default=0.9)
+    parser.add_argument('--discount_factor', type=float, default=0.99)
     parser.add_argument('--balance', type=int, default=100000000)
     parser.add_argument('--num_epoches', type=int, default=1000)
     parser.add_argument('--start_epsilon', type=float, default=1)
@@ -153,4 +153,5 @@ if __name__ == '__main__':
             learner.save_models()
     elif args.action == 'predict':
         pred = learner.predict(balance=args.balance)
-        print(pred)
+        with open(os.path.join(output_path, 'pred.json'), 'w') as f:
+            print(json.dumps(pred), file=f)
