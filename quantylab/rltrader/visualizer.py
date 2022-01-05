@@ -115,8 +115,7 @@ class Visualizer:
             self.axes[4].plot(x, pvs, '-k')
 
             # 에포크 및 탐험 비율
-            self.fig.suptitle('{} \nEpoch:{}/{} e={:.2f}'.format(
-                self.title, epoch_str, num_epoches, epsilon))
+            self.fig.suptitle(f'{self.title} \nEpoch:{epoch_str}/{num_epoches} e={epsilon:.2f}')
             # 캔버스 레이아웃 조정
             self.fig.tight_layout()
             self.fig.subplots_adjust(top=0.85)
@@ -136,9 +135,9 @@ class Visualizer:
             for ax in _axes:
                 ax.set_xlim(xlim)  # x축 limit 재설정
                 ax.get_xaxis().get_major_formatter() \
-                    .set_scientific(False)  # 과학적 표기 비활성화
+                    .set_scientific(False)  # x축의 과학적 표기 비활성화
                 ax.get_yaxis().get_major_formatter() \
-                    .set_scientific(False)  # 과학적 표기 비활성화
+                    .set_scientific(False)  # y축의 과학적 표기 비활성화
                 # x축 간격을 일정하게 설정
                 ax.ticklabel_format(useOffset=False)
 

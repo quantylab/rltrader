@@ -131,11 +131,14 @@ class LSTMNetwork(Network):
     def get_network_head(inp):
         # cuDNN 사용을 위한 조건
         # https://www.tensorflow.org/api_docs/python/tf/keras/layers/LSTM
-        output = LSTM(256, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(inp)
+        output = LSTM(256, dropout=0.1, return_sequences=True,
+                    kernel_initializer='random_normal')(inp)
         output = BatchNormalization()(output)
-        output = LSTM(128, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(output)
+        output = LSTM(128, dropout=0.1, return_sequences=True,
+                    kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
-        output = LSTM(64, dropout=0.1, return_sequences=True, kernel_initializer='random_normal')(output)
+        output = LSTM(64, dropout=0.1, return_sequences=True,
+                    kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)
         output = LSTM(32, dropout=0.1, kernel_initializer='random_normal')(output)
         output = BatchNormalization()(output)

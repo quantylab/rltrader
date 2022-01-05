@@ -22,8 +22,8 @@ class Agent:
     ACTIONS = [ACTION_BUY, ACTION_SELL, ACTION_HOLD]
     NUM_ACTIONS = len(ACTIONS)  # 인공 신경망에서 고려할 출력값의 개수
 
-    def __init__(self, \
-        environment, initial_balance, min_trading_unit=1, max_trading_unit=2):
+    def __init__(self, environment, initial_balance, 
+                min_trading_unit=1, max_trading_unit=2):
         # 현재 주식 가격을 가져오기 위해 환경 참조
         self.environment = environment
         self.initial_balance = initial_balance  # 초기 자본금

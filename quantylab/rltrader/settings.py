@@ -5,7 +5,6 @@ import platform
 
 
 # 경로 설정
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BASE_DIR = os.path.dirname(sys.modules['__main__'].__file__)
 
 
