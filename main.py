@@ -20,8 +20,8 @@ if __name__ == '__main__':
     parser.add_argument('--backend', choices=['pytorch', 'tensorflow', 'plaidml'], default='pytorch')
     parser.add_argument('--start_date', default='20200101')
     parser.add_argument('--end_date', default='20201231')
-    parser.add_argument('--lr', type=float, default=0.001)
-    parser.add_argument('--discount_factor', type=float, default=0.9)
+    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--discount_factor', type=float, default=0.7)
     parser.add_argument('--balance', type=int, default=100000000)
     args = parser.parse_args()
 
@@ -51,7 +51,6 @@ if __name__ == '__main__':
     params = json.dumps(vars(args))
     with open(os.path.join(output_path, 'params.json'), 'w') as f:
         f.write(params)
-    logging.warning(params)
 
     # 모델 경로 준비
     # 모델 포멧은 TensorFlow는 h5, PyTorch는 pickle
@@ -68,6 +67,7 @@ if __name__ == '__main__':
     stream_handler.setLevel(logging.WARNING)
     logging.basicConfig(
         format="%(message)s", handlers=[file_handler, stream_handler], level=logging.INFO)
+    logging.warning(params)
     
     # Backend 설정, 로그 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
     from quantylab.rltrader.learners import ReinforcementLearner, DQNLearner, \

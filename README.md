@@ -66,6 +66,9 @@ C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v11.2\libnvvp
 - `main.py`를 통해 Command Line에서 RLTrader 실행 가능합니다. `run_e3.cmd`를 참고해 주세요.
 - RLTrader 모듈들을 임포트하여 사용하는 것도 가능합니다. `main.py` 코드를 참고해 주세요.
 
+## 예시
+`python main.py --mode train --ver v3 --name 005930 --stock_code 005930 --rl_method a2c --net dnn --start_date 20180101 --end_date 20191231`
+
 # 학습데이터
 
 [퀀티랩 네이버 카페](https://cafe.naver.com/quantylab)에서 데이터 다운받을 수 있습니다. RLTrader 학습데이터 메뉴를 확인해 주세요.

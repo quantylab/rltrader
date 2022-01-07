@@ -148,7 +148,7 @@ class Agent:
                 (1 + self.TRADING_CHARGE) * trading_unit
             if invest_amount > 0:
                 self.avg_buy_price = \
-                    (self.avg_buy_price * self.num_stocks + curr_price) \
+                    (self.avg_buy_price * self.num_stocks + curr_price * trading_unit) \
                         / (self.num_stocks + trading_unit)  # 주당 매수 단가 갱신
                 self.balance -= invest_amount  # 보유 현금을 갱신
                 self.num_stocks += trading_unit  # 보유 주식 수를 갱신
