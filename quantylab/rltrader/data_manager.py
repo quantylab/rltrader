@@ -180,36 +180,36 @@ def load_data(code, date_from, date_to, ver='v2'):
         return load_data_v3_v4(code, date_from, date_to, ver)
 
     header = None if ver == 'v1' else 0
-    data = pd.read_csv(
+    df = pd.read_csv(
         os.path.join(settings.BASE_DIR, f'data/{ver}/{code}.csv'),
         thousands=',', header=header, converters={'date': lambda x: str(x)})
 
     if ver == 'v1':
-        data.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
+        df.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
 
     # 날짜 오름차순 정렬
-    data = data.sort_values(by='date').reset_index()
+    df = df.sort_values(by='date').reset_index()
 
     # 데이터 전처리
-    data = preprocess(data)
+    df = preprocess(df)
     
     # 기간 필터링
-    data['date'] = data['date'].str.replace('-', '')
-    data = data[(data['date'] >= date_from) & (data['date'] <= date_to)]
-    data = data.dropna()
+    df['date'] = df['date'].str.replace('-', '')
+    df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
+    df = df.fillna(method='ffill')
 
     # 차트 데이터 분리
-    chart_data = data[COLUMNS_CHART_DATA]
+    chart_data = df[COLUMNS_CHART_DATA]
 
     # 학습 데이터 분리
     training_data = None
     if ver == 'v1':
-        training_data = data[COLUMNS_TRAINING_DATA_V1]
+        training_data = df[COLUMNS_TRAINING_DATA_V1]
     elif ver == 'v1.1':
-        training_data = data[COLUMNS_TRAINING_DATA_V1_1]
+        training_data = df[COLUMNS_TRAINING_DATA_V1_1]
     elif ver == 'v2':
-        data.loc[:, ['per', 'pbr', 'roe']] = data[['per', 'pbr', 'roe']].apply(lambda x: x / 100)
-        training_data = data[COLUMNS_TRAINING_DATA_V2]
+        df.loc[:, ['per', 'pbr', 'roe']] = df[['per', 'pbr', 'roe']].apply(lambda x: x / 100)
+        training_data = df[COLUMNS_TRAINING_DATA_V2]
         training_data = training_data.apply(np.tanh)
     else:
         raise Exception('Invalid version.')
@@ -252,7 +252,7 @@ def load_data_v3_v4(code, date_from, date_to, ver):
     # 기간 필터링
     df['date'] = df['date'].str.replace('-', '')
     df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
-    df = df.dropna()
+    df = df.fillna(method='ffill')
 
     # 차트 데이터 분리
     chart_data = df[COLUMNS_CHART_DATA]
