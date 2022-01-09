@@ -11,6 +11,10 @@ from quantylab.rltrader.agent import Agent
 from quantylab.rltrader.networks import Network, DNN, LSTMNetwork, CNN
 from quantylab.rltrader.visualizer import Visualizer
 from quantylab.rltrader import utils
+from quantylab.rltrader import settings
+
+
+logger = logging.getLogger(settings.LOGGER_NAME)
 
 
 class ReinforcementLearner:
@@ -19,16 +23,16 @@ class ReinforcementLearner:
 
     def __init__(self, rl_method='rl', stock_code=None, 
                 chart_data=None, training_data=None,
-                min_trading_unit=1, max_trading_unit=2, 
+                min_trading_price=100000, max_trading_price=10000000, 
                 net='dnn', num_steps=1, lr=0.001, 
                 discount_factor=0.9, num_epoches=1000,
                 balance=100000000, start_epsilon=1,
                 value_network=None, policy_network=None,
                 output_path='', reuse_models=True):
         # 인자 확인
-        assert min_trading_unit > 0
-        assert max_trading_unit > 0
-        assert max_trading_unit >= min_trading_unit
+        assert min_trading_price > 0
+        assert max_trading_price > 0
+        assert max_trading_price >= min_trading_price
         assert num_steps > 0
         assert lr > 0
         # 강화학습 설정
@@ -41,9 +45,7 @@ class ReinforcementLearner:
         self.chart_data = chart_data
         self.environment = Environment(chart_data)
         # 에이전트 설정
-        self.agent = Agent(self.environment, balance,
-                    min_trading_unit=min_trading_unit,
-                    max_trading_unit=max_trading_unit)
+        self.agent = Agent(self.environment, balance, min_trading_price, max_trading_price)
         # 학습 데이터
         self.training_data = training_data
         self.sample = None
@@ -204,12 +206,11 @@ class ReinforcementLearner:
 
     def run(self, learning=True):
         info = (
-            f'[{self.stock_code}] RL:{self.rl_method} Net:{self.net} LR:{self.lr} '
-            f'DF:{self.discount_factor} '
-            f'TU:[{self.agent.min_trading_unit},{self.agent.max_trading_unit}]'
+            f'[{self.stock_code}] RL:{self.rl_method} NET:{self.net} '
+            f'LR:{self.lr} DF:{self.discount_factor} '
         )
         with self.lock:
-            logging.info(info)
+            logger.debug(info)
 
         # 시작 시간
         time_start = time.time()
@@ -299,7 +300,7 @@ class ReinforcementLearner:
             epoch_str = str(epoch + 1).rjust(num_epoches_digit, '0')
             time_end_epoch = time.time()
             elapsed_time_epoch = time_end_epoch - time_start_epoch
-            logging.info(f'[{self.stock_code}][Epoch {epoch_str}/{self.num_epoches}] '
+            logger.debug(f'[{self.stock_code}][Epoch {epoch_str}/{self.num_epoches}] '
                 f'Epsilon:{epsilon:.4f} #Expl.:{self.exploration_cnt}/{self.itr_cnt} '
                 f'#Buy:{self.agent.num_buy} #Sell:{self.agent.num_sell} #Hold:{self.agent.num_hold} '
                 f'#Stocks:{self.agent.num_stocks} PV:{self.agent.portfolio_value:,.0f} '
@@ -321,7 +322,7 @@ class ReinforcementLearner:
 
         # 학습 관련 정보 로그 기록
         with self.lock:
-            logging.info(f'[{self.stock_code}] Elapsed Time:{elapsed_time:.4f} '
+            logger.debug(f'[{self.stock_code}] Elapsed Time:{elapsed_time:.4f} '
                 f'Max PV:{max_portfolio_value:,.0f} #Win:{epoch_win_cnt}')
 
     def save_models(self):
@@ -488,7 +489,7 @@ class A2CLearner(ActorCriticLearner):
 class A3CLearner(ReinforcementLearner):
     def __init__(self, *args, list_stock_code=None, 
         list_chart_data=None, list_training_data=None,
-        list_min_trading_unit=None, list_max_trading_unit=None, 
+        list_min_trading_price=None, list_max_trading_price=None, 
         value_network_path=None, policy_network_path=None,
         **kwargs):
         assert len(list_training_data) > 0
@@ -510,15 +511,15 @@ class A3CLearner(ReinforcementLearner):
         # A2CLearner 생성
         self.learners = []
         for (stock_code, chart_data, training_data, 
-            min_trading_unit, max_trading_unit) in zip(
+            min_trading_price, max_trading_price) in zip(
                 list_stock_code, list_chart_data, list_training_data,
-                list_min_trading_unit, list_max_trading_unit
+                list_min_trading_price, list_max_trading_price
             ):
             learner = A2CLearner(*args, 
                 stock_code=stock_code, chart_data=chart_data, 
                 training_data=training_data,
-                min_trading_unit=min_trading_unit, 
-                max_trading_unit=max_trading_unit, 
+                min_trading_price=min_trading_price, 
+                max_trading_price=max_trading_price, 
                 shared_network=self.shared_network,
                 value_network=self.value_network,
                 policy_network=self.policy_network, **kwargs)

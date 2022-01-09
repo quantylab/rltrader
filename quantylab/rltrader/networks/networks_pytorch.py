@@ -53,6 +53,7 @@ class Network:
         self.model.to(device)
 
         self.optimizer = torch.optim.RMSprop(self.model.parameters(), lr=self.lr)
+        # self.optimizer = torch.optim.NAdam(self.model.parameters(), lr=self.lr)
         self.criterion = None
         if loss == 'mse':
             self.criterion = torch.nn.MSELoss()

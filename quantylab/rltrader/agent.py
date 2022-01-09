@@ -22,15 +22,14 @@ class Agent:
     ACTIONS = [ACTION_BUY, ACTION_SELL, ACTION_HOLD]
     NUM_ACTIONS = len(ACTIONS)  # 인공 신경망에서 고려할 출력값의 개수
 
-    def __init__(self, environment, initial_balance, 
-                min_trading_unit=1, max_trading_unit=2):
+    def __init__(self, environment, initial_balance, min_trading_price, max_trading_price):
         # 현재 주식 가격을 가져오기 위해 환경 참조
         self.environment = environment
         self.initial_balance = initial_balance  # 초기 자본금
 
-        # 최소 매매 단위, 최대 매매 단위, 지연보상 임계치
-        self.min_trading_unit = min_trading_unit  # 최소 단일 거래 단위
-        self.max_trading_unit = max_trading_unit  # 최대 단일 거래 단위
+        # 최소 단일 매매 금액, 최대 단일 매매 금액
+        self.min_trading_price = min_trading_price
+        self.max_trading_price = max_trading_price
 
         # Agent 클래스의 속성
         self.balance = initial_balance  # 현재 현금 잔고
@@ -86,6 +85,10 @@ class Agent:
             if (pred == maxpred).all():
                 epsilon = 1
 
+            # if pred_policy is not None:
+            #     if np.max(pred_policy) - np.min(pred_policy) < 0.05:
+            #         epsilon = 1
+
         # 탐험 결정
         if np.random.rand() < epsilon:
             exploration = True
@@ -105,8 +108,7 @@ class Agent:
     def validate_action(self, action):
         if action == Agent.ACTION_BUY:
             # 적어도 1주를 살 수 있는지 확인
-            if self.balance < self.environment.get_price() * (
-                    1 + self.TRADING_CHARGE) * self.min_trading_unit:
+            if self.balance < self.environment.get_price() * (1 + self.TRADING_CHARGE):
                 return False
         elif action == Agent.ACTION_SELL:
             # 주식 잔고가 있는지 확인
@@ -116,11 +118,12 @@ class Agent:
 
     def decide_trading_unit(self, confidence):
         if np.isnan(confidence):
-            return self.min_trading_unit
-        added_trading_unit = max(min(
-            int(confidence * (self.max_trading_unit - self.min_trading_unit)),
-            self.max_trading_unit-self.min_trading_unit), 0)
-        return self.min_trading_unit + added_trading_unit
+            return self.min_trading_price
+        added_trading_price = max(min(
+            int(confidence * (self.max_trading_price - self.min_trading_price)),
+            self.max_trading_price-self.min_trading_price), 0)
+        trading_price = self.min_trading_price + added_trading_price
+        return max(int(trading_price / self.environment.get_price()), 1)
 
     def act(self, action, confidence):
         if not self.validate_action(action):
@@ -139,13 +142,12 @@ class Agent:
             )
             # 보유 현금이 모자랄 경우 보유 현금으로 가능한 만큼 최대한 매수
             if balance < 0:
-                trading_unit = max(min(
+                trading_unit = min(
                     int(self.balance / (curr_price * (1 + self.TRADING_CHARGE))),
-                    self.max_trading_unit
-                ), self.min_trading_unit)
+                    int(self.max_trading_price / curr_price)
+                )
             # 수수료를 적용하여 총 매수 금액 산정
-            invest_amount = curr_price * \
-                (1 + self.TRADING_CHARGE) * trading_unit
+            invest_amount = curr_price * (1 + self.TRADING_CHARGE) * trading_unit
             if invest_amount > 0:
                 self.avg_buy_price = \
                     (self.avg_buy_price * self.num_stocks + curr_price * trading_unit) \

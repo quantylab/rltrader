@@ -115,7 +115,7 @@ class Visualizer:
             self.axes[4].plot(x, pvs, '-k')
 
             # 에포크 및 탐험 비율
-            self.fig.suptitle(f'{self.title} \nEpoch:{epoch_str}/{num_epoches} e={epsilon:.2f}')
+            self.fig.suptitle(f'{self.title} \nEPOCH:{epoch_str}/{num_epoches} EPSILON:{epsilon:.2f}')
             # 캔버스 레이아웃 조정
             self.fig.tight_layout()
             self.fig.subplots_adjust(top=0.85)

@@ -4,6 +4,7 @@ import logging
 import argparse
 import json
 
+os.environ['RLTRADER_BASE'] = 'D:\\dev\\rltrader'
 from quantylab.rltrader import settings
 from quantylab.rltrader import utils
 from quantylab.rltrader import data_manager
@@ -20,7 +21,7 @@ if __name__ == '__main__':
     parser.add_argument('--backend', choices=['pytorch', 'tensorflow', 'plaidml'], default='pytorch')
     parser.add_argument('--start_date', default='20200101')
     parser.add_argument('--end_date', default='20201231')
-    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--discount_factor', type=float, default=0.7)
     parser.add_argument('--balance', type=int, default=100000000)
     args = parser.parse_args()
@@ -61,13 +62,17 @@ if __name__ == '__main__':
     log_path = os.path.join(output_path, f'{output_name}.log')
     if os.path.exists(log_path):
         os.remove(log_path)
-    file_handler = logging.FileHandler(filename=log_path, encoding='utf-8')
-    file_handler.setLevel(logging.INFO)
+    logging.basicConfig(format='%(message)s')
+    logger = logging.getLogger(settings.LOGGER_NAME)
+    logger.setLevel(logging.DEBUG)
+    logger.propagate = False
     stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setLevel(logging.WARNING)
-    logging.basicConfig(
-        format="%(message)s", handlers=[file_handler, stream_handler], level=logging.INFO)
-    logging.warning(params)
+    stream_handler.setLevel(logging.INFO)
+    file_handler = logging.FileHandler(filename=log_path, encoding='utf-8')
+    file_handler.setLevel(logging.DEBUG)
+    logger.addHandler(stream_handler)
+    logger.addHandler(file_handler)
+    logger.info(params)
     
     # Backend 설정, 로그 설정을 먼저하고 RLTrader 모듈들을 이후에 임포트해야 함
     from quantylab.rltrader.learners import ReinforcementLearner, DQNLearner, \
@@ -77,8 +82,8 @@ if __name__ == '__main__':
     list_stock_code = []
     list_chart_data = []
     list_training_data = []
-    list_min_trading_unit = []
-    list_max_trading_unit = []
+    list_min_trading_price = []
+    list_max_trading_price = []
 
     for stock_code in args.stock_code:
         # 차트 데이터, 학습 데이터 준비
@@ -87,9 +92,9 @@ if __name__ == '__main__':
 
         assert len(chart_data) >= num_steps
         
-        # 최소/최대 투자 단위 설정
-        min_trading_unit = max(int(100000 / chart_data.iloc[-1]['close']), 1)
-        max_trading_unit = max(int(1000000 / chart_data.iloc[-1]['close']), 1)
+        # 최소/최대 단일 매매 금액 설정
+        min_trading_price = 100000
+        max_trading_price = 10000000
 
         # 공통 파라미터 설정
         common_params = {'rl_method': args.rl_method, 
@@ -104,8 +109,8 @@ if __name__ == '__main__':
             common_params.update({'stock_code': stock_code,
                 'chart_data': chart_data, 
                 'training_data': training_data,
-                'min_trading_unit': min_trading_unit, 
-                'max_trading_unit': max_trading_unit})
+                'min_trading_price': min_trading_price, 
+                'max_trading_price': max_trading_price})
             if args.rl_method == 'dqn':
                 learner = DQNLearner(**{**common_params, 
                     'value_network_path': value_network_path})
@@ -130,8 +135,8 @@ if __name__ == '__main__':
             list_stock_code.append(stock_code)
             list_chart_data.append(chart_data)
             list_training_data.append(training_data)
-            list_min_trading_unit.append(min_trading_unit)
-            list_max_trading_unit.append(max_trading_unit)
+            list_min_trading_price.append(min_trading_price)
+            list_max_trading_price.append(max_trading_price)
 
     if args.rl_method == 'a3c':
         learner = A3CLearner(**{
@@ -139,8 +144,8 @@ if __name__ == '__main__':
             'list_stock_code': list_stock_code, 
             'list_chart_data': list_chart_data, 
             'list_training_data': list_training_data,
-            'list_min_trading_unit': list_min_trading_unit, 
-            'list_max_trading_unit': list_max_trading_unit,
+            'list_min_trading_price': list_min_trading_price, 
+            'list_max_trading_price': list_max_trading_price,
             'value_network_path': value_network_path, 
             'policy_network_path': policy_network_path})
     
