@@ -1,10 +1,13 @@
+from datetime import datetime
 import threading
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 plt.switch_backend('agg')
 
 from mplfinance.original_flavor import candlestick_ohlc
 from quantylab.rltrader.agent import Agent
+
 
 lock = threading.Lock()
 
@@ -12,13 +15,16 @@ lock = threading.Lock()
 class Visualizer:
     COLORS = ['r', 'b', 'g']
 
-    def __init__(self, vnet=False):
+    def __init__(self):
         self.canvas = None
         # 캔버스 같은 역할을 하는 Matplotlib의 Figure 클래스 객체
         self.fig = None
         # 차트를 그리기 위한 Matplotlib의 Axes 클래스 객체
         self.axes = None
         self.title = ''  # 그림 제목
+        self.x = []
+        self.xticks = []
+        self.xlabels = []
 
     def prepare(self, chart_data, title):
         self.title = title
@@ -41,19 +47,21 @@ class Visualizer:
             ohlc = np.hstack((
                 x.reshape(-1, 1), np.array(chart_data)[:, 1:-1]))
             # 양봉은 빨간색으로 음봉은 파란색으로 표시
-            candlestick_ohlc(
-                self.axes[0], ohlc, colorup='r', colordown='b')
+            candlestick_ohlc(self.axes[0], ohlc, colorup='r', colordown='b')
             # 거래량 가시화
             ax = self.axes[0].twinx()
             volume = np.array(chart_data)[:, -1].tolist()
             ax.bar(x, volume, color='b', alpha=0.3)
+            # x축 설정
+            self.x = np.arange(len(chart_data['date']))
+            self.xticks = chart_data.index[[0, -1]]
+            self.xlabels = chart_data.iloc[[0, -1]]['date']
             
     def plot(self, epoch_str=None, num_epoches=None, epsilon=None,
             action_list=None, actions=None, num_stocks=None,
             outvals_value=[], outvals_policy=[], exps=None, 
             initial_balance=None, pvs=None):
         with lock:
-            x = np.arange(len(actions))  # 모든 차트가 공유할 x축 데이터
             actions = np.array(actions)  # 에이전트의 행동 배열
             # 가치 신경망의 출력 배열
             outvals_value = np.array(outvals_value)
@@ -64,21 +72,21 @@ class Visualizer:
 
             # 차트 2. 에이전트 상태 (행동, 보유 주식 수)
             for action, color in zip(action_list, self.COLORS):
-                for i in x[actions == action]:
+                for i in self.x[actions == action]:
                     # 배경 색으로 행동 표시
                     self.axes[1].axvline(i, color=color, alpha=0.1)
-            self.axes[1].plot(x, num_stocks, '-k')  # 보유 주식 수 그리기
+            self.axes[1].plot(self.x, num_stocks, '-k')  # 보유 주식 수 그리기
 
             # 차트 3. 가치 신경망
             if len(outvals_value) > 0:
                 max_actions = np.argmax(outvals_value, axis=1)
                 for action, color in zip(action_list, self.COLORS):
                     # 배경 그리기
-                    for idx in x:
+                    for idx in self.x:
                         if max_actions[idx] == action:
                             self.axes[2].axvline(idx, color=color, alpha=0.1)
                     # 가치 신경망 출력 그리기
-                    self.axes[2].plot(x, outvals_value[:, action], 
+                    self.axes[2].plot(self.x, outvals_value[:, action], 
                         color=color, linestyle='-')
             
             # 차트 4. 정책 신경망
@@ -87,7 +95,7 @@ class Visualizer:
                 self.axes[3].axvline(exp_idx, color='y')
             # 행동을 배경으로 그리기
             _outvals = outvals_policy if len(outvals_policy) > 0 else outvals_value
-            for idx, outval in zip(x, _outvals):
+            for idx, outval in zip(self.x, _outvals):
                 color = 'white'
                 if np.isnan(outval.max()):
                     continue
@@ -102,20 +110,22 @@ class Visualizer:
             if len(outvals_policy) > 0:
                 for action, color in zip(action_list, self.COLORS):
                     self.axes[3].plot(
-                        x, outvals_policy[:, action], 
+                        self.x, outvals_policy[:, action], 
                         color=color, linestyle='-')
 
             # 차트 5. 포트폴리오 가치
             self.axes[4].axhline(
                 initial_balance, linestyle='-', color='gray')
-            self.axes[4].fill_between(x, pvs, pvs_base,
+            self.axes[4].fill_between(self.x, pvs, pvs_base,
                 where=pvs > pvs_base, facecolor='r', alpha=0.1)
-            self.axes[4].fill_between(x, pvs, pvs_base,
+            self.axes[4].fill_between(self.x, pvs, pvs_base,
                 where=pvs < pvs_base, facecolor='b', alpha=0.1)
-            self.axes[4].plot(x, pvs, '-k')
-
+            self.axes[4].plot(self.x, pvs, '-k')
+            self.axes[4].xaxis.set_ticks(self.xticks)
+            self.axes[4].xaxis.set_ticklabels(self.xlabels)
+            
             # 에포크 및 탐험 비율
-            self.fig.suptitle(f'{self.title} \nEPOCH:{epoch_str}/{num_epoches} EPSILON:{epsilon:.2f}')
+            self.fig.suptitle(f'{self.title}\nEPOCH:{epoch_str}/{num_epoches} EPSILON:{epsilon:.2f}')
             # 캔버스 레이아웃 조정
             self.fig.tight_layout()
             self.fig.subplots_adjust(top=0.85)

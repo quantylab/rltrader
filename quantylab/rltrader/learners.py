@@ -4,6 +4,7 @@ import abc
 import collections
 import threading
 import time
+import json
 import numpy as np
 from tqdm import tqdm
 from quantylab.rltrader.environment import Environment
@@ -24,7 +25,7 @@ class ReinforcementLearner:
     def __init__(self, rl_method='rl', stock_code=None, 
                 chart_data=None, training_data=None,
                 min_trading_price=100000, max_trading_price=10000000, 
-                net='dnn', num_steps=1, lr=0.001, 
+                net='dnn', num_steps=1, lr=0.0005, 
                 discount_factor=0.9, num_epoches=1000,
                 balance=100000000, start_epsilon=1,
                 value_network=None, policy_network=None,
@@ -331,10 +332,7 @@ class ReinforcementLearner:
         if self.policy_network is not None and self.policy_network_path is not None:
             self.policy_network.save_model(self.policy_network_path)
 
-    def predict(self, balance=10000000):
-        # 에이전트 초기 자본금 설정
-        self.agent.set_balance(balance)
-        
+    def predict(self):
         # 에이전트 초기화
         self.agent.reset()
 
@@ -363,9 +361,10 @@ class ReinforcementLearner:
             
             # 신경망에 의한 행동 결정
             action, confidence, _ = self.agent.decide_action(pred_value, pred_policy, 0)
-            
-            result.append((int(action), float(confidence)))
+            result.append((self.environment.observation[0], int(action), float(confidence)))
 
+        with open(os.path.join(self.output_path, f'pred_{self.stock_code}.json'), 'w') as f:
+            print(json.dumps(result), file=f)
         return result
 
 
@@ -530,6 +529,18 @@ class A3CLearner(ReinforcementLearner):
         for learner in self.learners:
             threads.append(threading.Thread(
                 target=learner.run, daemon=True, kwargs={'learning': learning}
+            ))
+        for thread in threads:
+            thread.start()
+            time.sleep(1)
+        for thread in threads:
+            thread.join()
+
+    def predict(self):
+        threads = []
+        for learner in self.learners:
+            threads.append(threading.Thread(
+                target=learner.predict, daemon=True
             ))
         for thread in threads:
             thread.start()

@@ -156,6 +156,4 @@ if __name__ == '__main__':
         if args.mode in ['train', 'update']:
             learner.save_models()
     elif args.mode == 'predict':
-        pred = learner.predict(balance=args.balance)
-        with open(os.path.join(output_path, 'pred.json'), 'w') as f:
-            print(json.dumps(pred), file=f)
+        learner.predict()
