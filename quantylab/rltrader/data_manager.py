@@ -188,7 +188,7 @@ def load_data(code, date_from, date_to, ver='v2'):
         df.columns = ['date', 'open', 'high', 'low', 'close', 'volume']
 
     # 날짜 오름차순 정렬
-    df = df.sort_values(by='date').reset_index()
+    df = df.sort_values(by='date').reset_index(drop=True)
 
     # 데이터 전처리
     df = preprocess(df)
@@ -196,7 +196,7 @@ def load_data(code, date_from, date_to, ver='v2'):
     # 기간 필터링
     df['date'] = df['date'].str.replace('-', '')
     df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
-    df = df.fillna(method='ffill')
+    df = df.fillna(method='ffill').reset_index(drop=True)
 
     # 차트 데이터 분리
     chart_data = df[COLUMNS_CHART_DATA]
@@ -243,7 +243,7 @@ def load_data_v3_v4(code, date_from, date_to, ver):
     df = df.drop(df.filter(regex='_dup$').columns.tolist(), axis=1)
 
     # 날짜 오름차순 정렬
-    df = df.sort_values(by='date').reset_index()
+    df = df.sort_values(by='date').reset_index(drop=True)
 
     # 표준화
     scaler = StandardScaler()
@@ -252,7 +252,7 @@ def load_data_v3_v4(code, date_from, date_to, ver):
     # 기간 필터링
     df['date'] = df['date'].str.replace('-', '')
     df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
-    df = df.fillna(method='ffill')
+    df = df.fillna(method='ffill').reset_index(drop=True)
 
     # 차트 데이터 분리
     chart_data = df[COLUMNS_CHART_DATA]
