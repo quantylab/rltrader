@@ -44,7 +44,7 @@ if __name__ == '__main__':
         os.environ['KERAS_BACKEND'] = 'plaidml.keras.backend'
 
     # 출력 경로 생성
-    output_path = os.path.join(settings.BASE_DIR, f'output/{output_name}')
+    output_path = os.path.join(settings.BASE_DIR, 'output', output_name)
     if not os.path.isdir(output_path):
         os.makedirs(output_path)
 
@@ -55,8 +55,8 @@ if __name__ == '__main__':
 
     # 모델 경로 준비
     # 모델 포멧은 TensorFlow는 h5, PyTorch는 pickle
-    value_network_path = os.path.join(settings.BASE_DIR, f'models/{value_network_name}')
-    policy_network_path = os.path.join(settings.BASE_DIR, f'models/{policy_network_name}')
+    value_network_path = os.path.join(settings.BASE_DIR, 'models', value_network_name)
+    policy_network_path = os.path.join(settings.BASE_DIR, 'models', policy_network_name)
 
     # 로그 기록 설정
     log_path = os.path.join(output_path, f'{output_name}.log')
