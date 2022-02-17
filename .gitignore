@@ -111,7 +111,7 @@ venv.bak/
 /data/v4/
 /nb/
 note.md
-/models/
+/models/*.mdl
 profile.pstats
 profile.txt
 bat.cmd
