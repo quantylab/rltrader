@@ -271,7 +271,7 @@ class ReinforcementLearner:
                 action, confidence, exploration = \
                     self.agent.decide_action(pred_value, pred_policy, epsilon)
 
-                # 결정한 행동을 수행하고 즉시 보상과 지연 보상 획득
+                # 결정한 행동을 수행하고 보상 획득
                 reward = self.agent.act(action, confidence)
 
                 # 행동 및 행동에 대한 결과를 기억
@@ -473,11 +473,13 @@ class A2CLearner(ActorCriticLearner):
         y_value = np.zeros((len(self.memory_sample), self.agent.NUM_ACTIONS))
         y_policy = np.zeros((len(self.memory_sample), self.agent.NUM_ACTIONS))
         value_max_next = 0
+        reward_next = self.memory_reward[-1]
         for i, (sample, action, value, policy, reward) in enumerate(memory):
             x[i] = sample
-            r = self.memory_reward[-1] - reward
+            r = reward_next + self.memory_reward[-1] - reward * 2
+            reward_next = reward
             y_value[i, :] = value
-            y_value[i, action] = r + self.discount_factor * value_max_next
+            y_value[i, action] = np.tanh(r + self.discount_factor * value_max_next)
             advantage = y_value[i, action] - y_value[i].mean()
             y_policy[i, :] = policy
             y_policy[i, action] = utils.sigmoid(advantage)
@@ -532,7 +534,6 @@ class A3CLearner(ReinforcementLearner):
             ))
         for thread in threads:
             thread.start()
-            time.sleep(1)
         for thread in threads:
             thread.join()
 
@@ -544,6 +545,5 @@ class A3CLearner(ReinforcementLearner):
             ))
         for thread in threads:
             thread.start()
-            time.sleep(1)
         for thread in threads:
             thread.join()

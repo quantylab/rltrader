@@ -1,7 +1,6 @@
 import os
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import StandardScaler
 
 from quantylab.rltrader import settings
 
@@ -135,14 +134,6 @@ def preprocess(data, ver='v1'):
         data[f'volume_ma{window}_ratio'] = \
             (data['volume'] - data[f'volume_ma{window}']) / data[f'volume_ma{window}']
         
-        if ver == 'v1.1':
-            data[f'inst_ma{window}'] = data['close'].rolling(window).mean()
-            data[f'frgn_ma{window}'] = data['volume'].rolling(window).mean()
-            data[f'inst_ma{window}_ratio'] = \
-                (data['close'] - data[f'inst_ma{window}']) / data[f'inst_ma{window}']
-            data[f'frgn_ma{window}_ratio'] = \
-                (data['volume'] - data[f'frgn_ma{window}']) / data[f'frgn_ma{window}']
-
     data['open_lastclose_ratio'] = np.zeros(len(data))
     data.loc[1:, 'open_lastclose_ratio'] = \
         (data['open'][1:].values - data['close'][:-1].values) / data['close'][:-1].values
@@ -159,6 +150,13 @@ def preprocess(data, ver='v1'):
     )
 
     if ver == 'v1.1':
+        for window in windows:
+            data[f'inst_ma{window}'] = data['close'].rolling(window).mean()
+            data[f'frgn_ma{window}'] = data['volume'].rolling(window).mean()
+            data[f'inst_ma{window}_ratio'] = \
+                (data['close'] - data[f'inst_ma{window}']) / data[f'inst_ma{window}']
+            data[f'frgn_ma{window}_ratio'] = \
+                (data['volume'] - data[f'frgn_ma{window}']) / data[f'frgn_ma{window}']
         data['inst_lastinst_ratio'] = np.zeros(len(data))
         data.loc[1:, 'inst_lastinst_ratio'] = (
             (data['inst'][1:].values - data['inst'][:-1].values)
@@ -245,20 +243,18 @@ def load_data_v3_v4(code, date_from, date_to, ver):
     # 날짜 오름차순 정렬
     df = df.sort_values(by='date').reset_index(drop=True)
 
-    # 표준화
-    scaler = StandardScaler()
-    scaler.fit(df[columns].dropna().values)
-
     # 기간 필터링
     df['date'] = df['date'].str.replace('-', '')
     df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
     df = df.fillna(method='ffill').reset_index(drop=True)
+
+    # 데이터 조정
+    df.loc[:, ['per', 'pbr', 'roe']] = df[['per', 'pbr', 'roe']].apply(lambda x: x / 100)
 
     # 차트 데이터 분리
     chart_data = df[COLUMNS_CHART_DATA]
 
     # 학습 데이터 분리
     training_data = df[columns]
-    training_data = pd.DataFrame(scaler.transform(training_data.values), columns=columns)
-    
+
     return chart_data, training_data

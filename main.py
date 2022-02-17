@@ -127,7 +127,7 @@ if __name__ == '__main__':
                     'policy_network_path': policy_network_path})
             elif args.rl_method == 'monkey':
                 common_params['net'] = args.rl_method
-                common_params['num_epoches'] = 1
+                common_params['num_epoches'] = 10
                 common_params['start_epsilon'] = 1
                 learning = False
                 learner = ReinforcementLearner(**common_params)

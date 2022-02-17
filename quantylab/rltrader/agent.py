@@ -17,7 +17,7 @@ class Agent:
     # 행동
     ACTION_BUY = 0  # 매수
     ACTION_SELL = 1  # 매도
-    ACTION_HOLD = 2  # 홀딩
+    ACTION_HOLD = 2  # 관망
     # 인공 신경망에서 확률을 구할 행동들
     ACTIONS = [ACTION_BUY, ACTION_SELL, ACTION_HOLD]
     NUM_ACTIONS = len(ACTIONS)  # 인공 신경망에서 고려할 출력값의 개수
@@ -38,7 +38,7 @@ class Agent:
         self.portfolio_value = 0
         self.num_buy = 0  # 매수 횟수
         self.num_sell = 0  # 매도 횟수
-        self.num_hold = 0  # 홀딩 횟수
+        self.num_hold = 0  # 관망 횟수
 
         # Agent 클래스의 상태
         self.ratio_hold = 0  # 주식 보유 비율
@@ -175,9 +175,9 @@ class Agent:
                 self.balance += invest_amount  # 보유 현금을 갱신
                 self.num_sell += 1  # 매도 횟수 증가
 
-        # 홀딩
+        # 관망
         elif action == Agent.ACTION_HOLD:
-            self.num_hold += 1  # 홀딩 횟수 증가
+            self.num_hold += 1  # 관망 횟수 증가
 
         # 포트폴리오 가치 갱신
         self.portfolio_value = self.balance + curr_price * self.num_stocks

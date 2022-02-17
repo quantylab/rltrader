@@ -5,9 +5,6 @@ call C:\Users\USER\Anaconda3\Scripts\activate.bat
 
 @REM 삼성전자: 005930
 @REM 카카오: 035720
-@REM LG화학: 051910
-@REM 현대차: 005380
-@REM 셀트리온: 068270
 @REM POSCO: 005490
 
 for %%c in (005930 035720 005490) do (

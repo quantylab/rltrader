@@ -1,8 +1,6 @@
-from datetime import datetime
 import threading
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.dates as mdates
 plt.switch_backend('agg')
 
 from mplfinance.original_flavor import candlestick_ohlc
@@ -104,7 +102,7 @@ class Visualizer:
                 elif outval.argmax() == Agent.ACTION_SELL:
                     color = self.COLORS[1]  # 매도 파란색
                 elif outval.argmax() == Agent.ACTION_HOLD:
-                    color = self.COLORS[2]  # 홀딩 초록색
+                    color = self.COLORS[2]  # 관망 초록색
                 self.axes[3].axvline(idx, color=color, alpha=0.1)
             # 정책 신경망의 출력 그리기
             if len(outvals_policy) > 0:
