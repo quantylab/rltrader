@@ -1,12 +1,15 @@
-import sys
 import os
 import locale
 import platform
 
 
+# 로거 이름
+LOGGER_NAME = 'rltrader'
+
+
 # 경로 설정
-# BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR = os.path.dirname(sys.modules['__main__'].__file__)
+BASE_DIR = os.environ.get('RLTRADER_BASE', 
+    os.path.abspath(os.path.join(__file__, os.path.pardir, os.path.pardir, os.path.pardir)))
 
 
 # 로케일 설정

@@ -4,17 +4,18 @@ import abc
 import collections
 import threading
 import time
+import json
 import numpy as np
 from tqdm import tqdm
-
 from quantylab.rltrader.environment import Environment
 from quantylab.rltrader.agent import Agent
-
-if os.environ.get('RLTRADER_BACKEND', 'pytorch') == 'pytorch':
-    from quantylab.rltrader.networks_pytorch import Network, DNN, LSTMNetwork, CNN, Q3
-else:
-    from quantylab.rltrader.networks_keras import Network, DNN, LSTMNetwork, CNN
+from quantylab.rltrader.networks import Network, DNN, LSTMNetwork, CNN
 from quantylab.rltrader.visualizer import Visualizer
+from quantylab.rltrader import utils
+from quantylab.rltrader import settings
+
+
+logger = logging.getLogger(settings.LOGGER_NAME)
 
 
 class ReinforcementLearner:
@@ -23,16 +24,16 @@ class ReinforcementLearner:
 
     def __init__(self, rl_method='rl', stock_code=None, 
                 chart_data=None, training_data=None,
-                min_trading_unit=1, max_trading_unit=2, 
-                net='dnn', num_steps=1, lr=0.001, 
-                discount_factor=0.9, num_epoches=100,
-                balance=10000000, start_epsilon=1,
+                min_trading_price=100000, max_trading_price=10000000, 
+                net='dnn', num_steps=1, lr=0.0005, 
+                discount_factor=0.9, num_epoches=1000,
+                balance=100000000, start_epsilon=1,
                 value_network=None, policy_network=None,
                 output_path='', reuse_models=True):
         # 인자 확인
-        assert min_trading_unit > 0
-        assert max_trading_unit > 0
-        assert max_trading_unit >= min_trading_unit
+        assert min_trading_price > 0
+        assert max_trading_price > 0
+        assert max_trading_price >= min_trading_price
         assert num_steps > 0
         assert lr > 0
         # 강화학습 설정
@@ -45,9 +46,7 @@ class ReinforcementLearner:
         self.chart_data = chart_data
         self.environment = Environment(chart_data)
         # 에이전트 설정
-        self.agent = Agent(self.environment, balance,
-                    min_trading_unit=min_trading_unit,
-                    max_trading_unit=max_trading_unit)
+        self.agent = Agent(self.environment, balance, min_trading_price, max_trading_price)
         # 학습 데이터
         self.training_data = training_data
         self.sample = None
@@ -87,59 +86,46 @@ class ReinforcementLearner:
             self.value_network = DNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, shared_network=shared_network, 
+                lr=self.lr, shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'lstm':
             self.value_network = LSTMNetwork(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'cnn':
             self.value_network = CNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
-                activation=activation, loss=loss)
-        elif self.net == 'q3':
-            self.value_network = Q3(
-                input_dim=self.num_features, 
-                output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         if self.reuse_models and os.path.exists(self.value_network_path):
             self.value_network.load_model(model_path=self.value_network_path)
 
-    def init_policy_network(self, shared_network=None, activation='sigmoid', loss='binary_crossentropy'):
+    def init_policy_network(self, shared_network=None, activation='sigmoid', 
+                            loss='binary_crossentropy'):
         if self.net == 'dnn':
             self.policy_network = DNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, shared_network=shared_network, 
+                lr=self.lr, shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'lstm':
             self.policy_network = LSTMNetwork(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         elif self.net == 'cnn':
             self.policy_network = CNN(
                 input_dim=self.num_features, 
                 output_dim=self.agent.NUM_ACTIONS, 
                 lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
-                activation=activation, loss=loss)
-        elif self.net == 'q3':
-            self.policy_network = Q3(
-                input_dim=self.num_features, 
-                output_dim=self.agent.NUM_ACTIONS, 
-                lr=self.lr, num_steps=self.num_steps, 
-                shared_network=shared_network, 
+                shared_network=shared_network,
                 activation=activation, loss=loss)
         if self.reuse_models and os.path.exists(self.policy_network_path):
             self.policy_network.load_model(model_path=self.policy_network_path)
@@ -181,9 +167,11 @@ class ReinforcementLearner:
     def get_batch(self):
         pass
 
-    def update_networks(self):
+    def fit(self):
         # 배치 학습 데이터 생성
         x, y_value, y_policy = self.get_batch()
+        # 손실 초기화
+        self.loss = None
         if len(x) > 0:
             loss = 0
             if y_value is not None:
@@ -192,20 +180,17 @@ class ReinforcementLearner:
             if y_policy is not None:
                 # 정책 신경망 갱신
                 loss += self.policy_network.train_on_batch(x, y_policy)
-            return loss
-        return None
-
-    def fit(self):
-        # 배치 학습 데이터 생성 및 신경망 갱신
-        self.loss = self.update_networks()
+            self.loss = loss
 
     def visualize(self, epoch_str, num_epoches, epsilon):
         self.memory_action = [Agent.ACTION_HOLD] * (self.num_steps - 1) + self.memory_action
         self.memory_num_stocks = [0] * (self.num_steps - 1) + self.memory_num_stocks
         if self.value_network is not None:
-            self.memory_value = [np.array([np.nan] * len(Agent.ACTIONS))] * (self.num_steps - 1) + self.memory_value
+            self.memory_value = [np.array([np.nan] * len(Agent.ACTIONS))] \
+                                * (self.num_steps - 1) + self.memory_value
         if self.policy_network is not None:
-            self.memory_policy = [np.array([np.nan] * len(Agent.ACTIONS))] * (self.num_steps - 1) + self.memory_policy
+            self.memory_policy = [np.array([np.nan] * len(Agent.ACTIONS))] \
+                                * (self.num_steps - 1) + self.memory_policy
         self.memory_pv = [self.agent.initial_balance] * (self.num_steps - 1) + self.memory_pv
         self.visualizer.plot(
             epoch_str=epoch_str, num_epoches=num_epoches, 
@@ -218,23 +203,15 @@ class ReinforcementLearner:
             initial_balance=self.agent.initial_balance, 
             pvs=self.memory_pv,
         )
-        self.visualizer.save(os.path.join(
-            self.epoch_summary_dir, 
-            'epoch_summary_{}.png'.format(epoch_str))
-        )
+        self.visualizer.save(os.path.join(self.epoch_summary_dir, f'epoch_summary_{epoch_str}.png'))
 
     def run(self, learning=True):
         info = (
-            "[{code}] RL:{rl} Net:{net} LR:{lr} "
-            "DF:{discount_factor} TU:[{min_trading_unit},{max_trading_unit}]"
-        ).format(
-            code=self.stock_code, rl=self.rl_method, net=self.net,
-            lr=self.lr, discount_factor=self.discount_factor,
-            min_trading_unit=self.agent.min_trading_unit, 
-            max_trading_unit=self.agent.max_trading_unit,
+            f'[{self.stock_code}] RL:{self.rl_method} NET:{self.net} '
+            f'LR:{self.lr} DF:{self.discount_factor} '
         )
         with self.lock:
-            logging.info(info)
+            logger.debug(info)
 
         # 시작 시간
         time_start = time.time()
@@ -244,8 +221,7 @@ class ReinforcementLearner:
         self.visualizer.prepare(self.environment.chart_data, info)
 
         # 가시화 결과 저장할 폴더 준비
-        self.epoch_summary_dir = os.path.join(
-            self.output_path, 'epoch_summary_{}'.format(self.stock_code))
+        self.epoch_summary_dir = os.path.join(self.output_path, f'epoch_summary_{self.stock_code}')
         if not os.path.isdir(self.epoch_summary_dir):
             os.makedirs(self.epoch_summary_dir)
         else:
@@ -256,7 +232,7 @@ class ReinforcementLearner:
         max_portfolio_value = 0
         epoch_win_cnt = 0
 
-        # 학습 반복
+        # 에포크 반복
         for epoch in tqdm(range(self.num_epoches)):
             time_start_epoch = time.time()
 
@@ -268,7 +244,7 @@ class ReinforcementLearner:
 
             # 학습을 진행할 수록 탐험 비율 감소
             if learning:
-                epsilon = (1 - (epoch / (self.num_epoches - 1))) ** 2
+                epsilon = self.start_epsilon * (1 - (epoch / (self.num_epoches - 1)))
             else:
                 epsilon = self.start_epsilon
 
@@ -292,9 +268,10 @@ class ReinforcementLearner:
                     pred_policy = self.policy_network.predict(list(q_sample))
                 
                 # 신경망 또는 탐험에 의한 행동 결정
-                action, confidence, exploration = self.agent.decide_action(pred_value, pred_policy, epsilon)
+                action, confidence, exploration = \
+                    self.agent.decide_action(pred_value, pred_policy, epsilon)
 
-                # 결정한 행동을 수행하고 즉시 보상과 지연 보상 획득
+                # 결정한 행동을 수행하고 보상 획득
                 reward = self.agent.act(action, confidence)
 
                 # 행동 및 행동에 대한 결과를 기억
@@ -324,18 +301,14 @@ class ReinforcementLearner:
             epoch_str = str(epoch + 1).rjust(num_epoches_digit, '0')
             time_end_epoch = time.time()
             elapsed_time_epoch = time_end_epoch - time_start_epoch
-            logging.info("[{}][Epoch {}/{}] Epsilon:{:.4f} "
-                "#Expl.:{}/{} #Buy:{} #Sell:{} #Hold:{} "
-                "#Stocks:{} PV:{:,.0f} "
-                "Loss:{:.6f} ET:{:.4f}".format(
-                    self.stock_code, epoch_str, self.num_epoches, epsilon, 
-                    self.exploration_cnt, self.itr_cnt,
-                    self.agent.num_buy, self.agent.num_sell, self.agent.num_hold,
-                    self.agent.num_stocks, self.agent.portfolio_value, 
-                    self.loss, elapsed_time_epoch))
+            logger.debug(f'[{self.stock_code}][Epoch {epoch_str}/{self.num_epoches}] '
+                f'Epsilon:{epsilon:.4f} #Expl.:{self.exploration_cnt}/{self.itr_cnt} '
+                f'#Buy:{self.agent.num_buy} #Sell:{self.agent.num_sell} #Hold:{self.agent.num_hold} '
+                f'#Stocks:{self.agent.num_stocks} PV:{self.agent.portfolio_value:,.0f} '
+                f'Loss:{self.loss:.6f} ET:{elapsed_time_epoch:.4f}')
 
             # 에포크 관련 정보 가시화
-            if self.num_epoches == 1 or (epoch + 1) % 10 == 0:
+            if self.num_epoches == 1 or (epoch + 1) % int(self.num_epoches / 10) == 0:
                 self.visualize(epoch_str, self.num_epoches, epsilon)
 
             # 학습 관련 정보 갱신
@@ -350,10 +323,8 @@ class ReinforcementLearner:
 
         # 학습 관련 정보 로그 기록
         with self.lock:
-            logging.info("[{code}] Elapsed Time:{elapsed_time:.4f} "
-                "Max PV:{max_pv:,.0f} #Win:{cnt_win}".format(
-                code=self.stock_code, elapsed_time=elapsed_time, 
-                max_pv=max_portfolio_value, cnt_win=epoch_win_cnt))
+            logger.debug(f'[{self.stock_code}] Elapsed Time:{elapsed_time:.4f} '
+                f'Max PV:{max_portfolio_value:,.0f} #Win:{epoch_win_cnt}')
 
     def save_models(self):
         if self.value_network is not None and self.value_network_path is not None:
@@ -361,10 +332,7 @@ class ReinforcementLearner:
         if self.policy_network is not None and self.policy_network_path is not None:
             self.policy_network.save_model(self.policy_network_path)
 
-    def predict(self, balance=10000000):
-        # 에이전트 초기 자본금 설정
-        self.agent.set_balance(balance)
-        
+    def predict(self):
         # 에이전트 초기화
         self.agent.reset()
 
@@ -393,9 +361,10 @@ class ReinforcementLearner:
             
             # 신경망에 의한 행동 결정
             action, confidence, _ = self.agent.decide_action(pred_value, pred_policy, 0)
-            
-            result.append((int(action), float(confidence)))
+            result.append((self.environment.observation[0], int(action), float(confidence)))
 
+        with open(os.path.join(self.output_path, f'pred_{self.stock_code}.json'), 'w') as f:
+            print(json.dumps(result), file=f)
         return result
 
 
@@ -419,7 +388,6 @@ class DQNLearner(ReinforcementLearner):
             x[i] = sample
             r = self.memory_reward[-1] - reward
             y_value[i] = value
-            # Q(s,a) := Q(s,a) + alpha * (R + gamma * max(Q(s',a')))
             y_value[i, action] = r + self.discount_factor * value_max_next
             value_max_next = value.max()
         return x, y_value, None
@@ -443,7 +411,8 @@ class PolicyGradientLearner(ReinforcementLearner):
         for i, (sample, action, policy, reward) in enumerate(memory):
             x[i] = sample
             r = self.memory_reward[-1] - reward
-            y_policy[i, action] = 1 if r > 0 else 0
+            y_policy[i, :] = policy
+            y_policy[i, action] = utils.sigmoid(r)
         return x, None, y_policy
 
 
@@ -480,8 +449,10 @@ class ActorCriticLearner(ReinforcementLearner):
         for i, (sample, action, value, policy, reward) in enumerate(memory):
             x[i] = sample
             r = self.memory_reward[-1] - reward
+            y_value[i, :] = value
             y_value[i, action] = r + self.discount_factor * value_max_next
-            y_policy[i, action] = 1 if r > 0 else 0
+            y_policy[i, :] = policy
+            y_policy[i, action] = utils.sigmoid(r)
             value_max_next = value.max()
         return x, y_value, y_policy
 
@@ -502,12 +473,16 @@ class A2CLearner(ActorCriticLearner):
         y_value = np.zeros((len(self.memory_sample), self.agent.NUM_ACTIONS))
         y_policy = np.zeros((len(self.memory_sample), self.agent.NUM_ACTIONS))
         value_max_next = 0
+        reward_next = self.memory_reward[-1]
         for i, (sample, action, value, policy, reward) in enumerate(memory):
             x[i] = sample
-            r = self.memory_reward[-1] - reward
-            y_value[i, action] = r + self.discount_factor * value_max_next
+            r = reward_next + self.memory_reward[-1] - reward * 2
+            reward_next = reward
+            y_value[i, :] = value
+            y_value[i, action] = np.tanh(r + self.discount_factor * value_max_next)
             advantage = y_value[i, action] - y_value[i].mean()
-            y_policy[i, action] = 1 if advantage > 0 else 0
+            y_policy[i, :] = policy
+            y_policy[i, action] = utils.sigmoid(advantage)
             value_max_next = value.max()
         return x, y_value, y_policy
 
@@ -515,7 +490,7 @@ class A2CLearner(ActorCriticLearner):
 class A3CLearner(ReinforcementLearner):
     def __init__(self, *args, list_stock_code=None, 
         list_chart_data=None, list_training_data=None,
-        list_min_trading_unit=None, list_max_trading_unit=None, 
+        list_min_trading_price=None, list_max_trading_price=None, 
         value_network_path=None, policy_network_path=None,
         **kwargs):
         assert len(list_training_data) > 0
@@ -525,7 +500,8 @@ class A3CLearner(ReinforcementLearner):
         # 공유 신경망 생성
         self.shared_network = Network.get_shared_network(
             net=self.net, num_steps=self.num_steps, 
-            input_dim=self.num_features)
+            input_dim=self.num_features,
+            output_dim=self.agent.NUM_ACTIONS)
         self.value_network_path = value_network_path
         self.policy_network_path = policy_network_path
         if self.value_network is None:
@@ -536,15 +512,15 @@ class A3CLearner(ReinforcementLearner):
         # A2CLearner 생성
         self.learners = []
         for (stock_code, chart_data, training_data, 
-            min_trading_unit, max_trading_unit) in zip(
+            min_trading_price, max_trading_price) in zip(
                 list_stock_code, list_chart_data, list_training_data,
-                list_min_trading_unit, list_max_trading_unit
+                list_min_trading_price, list_max_trading_price
             ):
             learner = A2CLearner(*args, 
                 stock_code=stock_code, chart_data=chart_data, 
                 training_data=training_data,
-                min_trading_unit=min_trading_unit, 
-                max_trading_unit=max_trading_unit, 
+                min_trading_price=min_trading_price, 
+                max_trading_price=max_trading_price, 
                 shared_network=self.shared_network,
                 value_network=self.value_network,
                 policy_network=self.policy_network, **kwargs)
@@ -554,14 +530,20 @@ class A3CLearner(ReinforcementLearner):
         threads = []
         for learner in self.learners:
             threads.append(threading.Thread(
-                target=learner.run, daemon=True, kwargs={
-                'num_epoches': self.num_epoches, 'balance': self.agent.balance,
-                'discount_factor': self.discount_factor, 
-                'start_epsilon': self.start_epsilon,
-                'learning': learning
-            }))
+                target=learner.run, daemon=True, kwargs={'learning': learning}
+            ))
         for thread in threads:
             thread.start()
-            time.sleep(1)
+        for thread in threads:
+            thread.join()
+
+    def predict(self):
+        threads = []
+        for learner in self.learners:
+            threads.append(threading.Thread(
+                target=learner.predict, daemon=True
+            ))
+        for thread in threads:
+            thread.start()
         for thread in threads:
             thread.join()

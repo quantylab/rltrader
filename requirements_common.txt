@@ -1,5 +1,5 @@
-tensorflow==2.5
 numpy
 pandas
+matplotlib
 mplfinance
 tqdm

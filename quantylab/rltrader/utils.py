@@ -21,4 +21,5 @@ def get_time_str():
 
 
 def sigmoid(x):
+    x = max(min(x, 10), -10)
     return 1. / (1. + np.exp(-x))
