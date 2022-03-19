@@ -1,4 +1,4 @@
-# 파이썬과 케라스를 이용한 딥러닝/강화학습 주식투자 - 퀀트 투자, 알고리즘 트레이딩을 위한 최첨단 해법 입문 (개정판)
+# 파이썬를 이용한 딥러닝/강화학습 주식투자 - 파이토치와 케라스를 활용한 인공지능 퀀트 투자 시스템 (개정2판)
 
 [퀀티랩 블로그 관련 포스트](http://blog.quantylab.com/pages/rltrader.html)
 
@@ -8,7 +8,7 @@
 - [교보문고](http://www.kyobobook.co.kr/product/detailViewKor.laf?ejkGb=KOR&mallGb=KOR&barcode=9791158392031&orderClick=LEa&Kc=)
 - [Yes24](http://www.yes24.com/Product/Goods/89999978?scode=032&OzSrank=1)
 
-![표지](/img/e2.1_introduction.jpg)
+![표지](/img/e3_introduction.jpg)
 
 ## 이 책에서 다루는 내용
 - 딥러닝과 강화학습 이론
@@ -26,7 +26,7 @@
 - [plaidML](https://plaidml.github.io/plaidml/)
   - `pip install plaidml-keras==0.7.0`
   - `pip install mplfinance`
-- [PyTorch]
+- [PyTorch](https://pytorch.org/)
 
 # 개발 환경
 
