@@ -4,7 +4,6 @@ import logging
 import argparse
 import json
 
-os.environ['RLTRADER_BASE'] = 'D:\\dev\\rltrader'
 from quantylab.rltrader import settings
 from quantylab.rltrader import utils
 from quantylab.rltrader import data_manager
