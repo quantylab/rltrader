@@ -159,7 +159,7 @@ class ReinforcementLearner:
         self.environment.observe()
         if len(self.training_data) > self.training_data_idx + 1:
             self.training_data_idx += 1
-            self.sample = self.training_data[self.training_data_idx, :].tolist()
+            self.sample = self.training_data[self.training_data_idx].tolist()
             self.sample.extend(self.agent.get_states())
             return self.sample
         return None
@@ -364,10 +364,11 @@ class ReinforcementLearner:
             
             # 신경망에 의한 행동 결정
             result.append((self.environment.observation[0], pred_value, pred_policy))
-            
+
         if self.gen_output:
             with open(os.path.join(self.output_path, f'pred_{self.stock_code}.json'), 'w') as f:
                 print(json.dumps(result), file=f)
+
         return result
 
 

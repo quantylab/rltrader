@@ -11,7 +11,7 @@ class Agent:
     TRADING_CHARGE = 0.00015  # 거래 수수료 0.015%
     # TRADING_CHARGE = 0.00011  # 거래 수수료 0.011%
     # TRADING_CHARGE = 0  # 거래 수수료 미적용
-    TRADING_TAX = 0.0025  # 거래세 0.25%
+    TRADING_TAX = 0.002  # 거래세 0.2%
     # TRADING_TAX = 0  # 거래세 미적용
 
     # 행동
