@@ -112,6 +112,14 @@ v3, v4 학습데이터는 시장 데이터와 종목 데이터를 합하여 사�
 - `python -m cProfile -o profile.pstats main.py ...`
 - `python profile.py`
 
+# Tips
+
+- Windows Power Shell에서 로그 Tail 하는 방법
+
+```
+cat D:\dev\rltrader\output\train_000240_a2c_lstm\train_000240_a2c_lstm.log -Wait -Tail 100
+```
+
 # Troubleshooting
 
 ## TF 1.15에서 다음 에러가 나면 Python 3.6으로 맞춰준다.
