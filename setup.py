@@ -16,7 +16,7 @@ setup(
         'mplfinance',
         'tqdm',
         'sklearn',
-        'tensorflow==2.7.0',
+        'tensorflow==2.9.3',
         'torch==1.10.1',
     ]
 )
