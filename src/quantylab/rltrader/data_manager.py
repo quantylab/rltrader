@@ -124,6 +124,12 @@ COLUMNS_TRAINING_DATA_V4 = [
     'msci_germany_diffratio', 'msci_germany_ma5_ratio', 'msci_germany_ma20_ratio', 'msci_germany_ma60_ratio', 'msci_germany_ma120_ratio',
 ]
 
+COLUMNS_TRAINING_DATA_V4_1 = []
+with open(os.path.join(settings.BASE_DIR, 'conf', 'data', 'v4.1', 'feature_list.txt')) as f:
+    for line in f:
+        COLUMNS_TRAINING_DATA_V4_1.append(line.strip())
+
+
 def preprocess(data, ver='v1'):
     windows = [5, 10, 20, 60, 120]
     for window in windows:
@@ -174,9 +180,44 @@ def preprocess(data, ver='v1'):
 
 
 def load_data(code, date_from, date_to, ver='v2'):
-    if ver in ['v3', 'v4']:
+    if ver in ['v1', 'v1.1', 'v2']:
+        return load_data_v1_v2(code, date_from, date_to, ver)
+    elif ver in ['v3', 'v4']:
         return load_data_v3_v4(code, date_from, date_to, ver)
+    elif ver in ['v4.1', 'v4.2']:
+        stock_filename = ''
+        market_filename = ''
+        data_dir = os.path.join(settings.BASE_DIR, 'data', 'v4.1')
+        for filename in os.listdir(data_dir):
+            if code in filename:
+                stock_filename = filename
+            elif 'market' in filename:
+                market_filename = filename
+        
+        chart_data, training_data = load_data_v4_1(
+            os.path.join(data_dir, stock_filename),
+            os.path.join(data_dir, market_filename),
+            date_from, date_to
+        )
+        if ver == 'v4.1':
+            return chart_data, training_data
+        
+        tips_filename = ''
+        taylor_us_filename = ''
+        data_dir = os.path.join(settings.BASE_DIR, 'data', 'v4.2')
+        for filename in os.listdir(data_dir):
+            if filename.startswith('tips'):
+                tips_filename = filename
+            if filename.startswith('taylor_us'):
+                taylor_us_filename = filename
+        return load_data_v4_2(
+            pd.concat([chart_data, training_data], axis=1),
+            os.path.join(data_dir, tips_filename),
+            os.path.join(data_dir, taylor_us_filename)
+        )
 
+
+def load_data_v1_v2(code, date_from, date_to, ver):
     header = None if ver == 'v1' else 0
     df = pd.read_csv(
         os.path.join(settings.BASE_DIR, 'data', ver, f'{code}.csv'),
@@ -277,3 +318,51 @@ def load_data_v3_v4(code, date_from, date_to, ver):
         training_data = scaler.transform(training_data)
 
     return chart_data, training_data
+
+
+def load_data_v4_1(stock_data_path, market_data_path, date_from, date_to):
+    df_stock = None
+    if stock_data_path.endswith('.csv'):
+        df_stock = pd.read_csv(stock_data_path, dtype={'date': str})
+    elif stock_data_path.endswith('.json'):
+        import json
+        with open(stock_data_path) as f:
+            df_stock = pd.DataFrame(**json.load(f))
+    df_market = None
+    if market_data_path.endswith('.csv'):
+        df_market = pd.read_csv(market_data_path, dtype={'date': str})
+    elif market_data_path.endswith('.json'):
+        import json
+        with open(market_data_path) as f:
+            df_market = pd.DataFrame(**json.load(f))
+    df = pd.merge(df_stock, df_market, on='date', how='left')
+    df = df[(df['date'] >= date_from) & (df['date'] <= date_to)]
+    df = df[COLUMNS_CHART_DATA + COLUMNS_TRAINING_DATA_V4_1]
+    df = df.fillna(method='ffill').fillna(method='bfill').reset_index(drop=True)
+    df = df.fillna(0)
+    return df[COLUMNS_CHART_DATA], df[COLUMNS_TRAINING_DATA_V4_1].values
+
+
+def load_data_v4_2(df_v4_1, stock_data_path, market_data_path):
+    df_tips = None
+    if stock_data_path.endswith('.csv'):
+        df_tips = pd.read_csv(stock_data_path, dtype={'date': str})
+    elif stock_data_path.endswith('.json'):
+        import json
+        with open(stock_data_path) as f:
+            df_tips = pd.DataFrame(**json.load(f))
+    df_taylor_us = None
+    if market_data_path.endswith('.csv'):
+        df_taylor_us = pd.read_csv(market_data_path, dtype={'date': str})
+    elif market_data_path.endswith('.json'):
+        import json
+        with open(market_data_path) as f:
+            df_taylor_us = pd.DataFrame(**json.load(f))
+    df = pd.merge(df_v4_1, df_tips.rename(columns={'value': 'tips'}), on='date', how='left')
+    df = pd.merge(df, df_taylor_us.rename(columns={'taylor': 'taylor_us'}), on='date', how='left')
+    df[['tips', 'taylor_us']] = df[['tips', 'taylor_us']] / 100
+    COLUMNS_TRAINING_DATA = COLUMNS_TRAINING_DATA_V4_1 + ['tips', 'taylor_us']
+    df = df[COLUMNS_CHART_DATA + COLUMNS_TRAINING_DATA]
+    df = df.fillna(method='ffill').fillna(method='bfill').reset_index(drop=True)
+    df = df.fillna(0)
+    return df[COLUMNS_CHART_DATA], df[COLUMNS_TRAINING_DATA].values

@@ -2,7 +2,7 @@ from setuptools import find_namespace_packages, setup
 
 setup(
     name='rltrader',
-    version='3.1',
+    version='3.2.1',
     description='Quantylab Reinforcement Learning for Stock Trading',
     author='Quantylab',
     author_email='quantylab@gmail.com',
