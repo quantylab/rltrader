@@ -17,6 +17,6 @@ setup(
         'tqdm',
         'sklearn',
         'tensorflow==2.7.0',
-        'torch==1.10.1',
+        'torch==2.2.0',
     ]
 )
