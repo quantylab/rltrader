@@ -116,3 +116,4 @@ profile.pstats
 profile.txt
 bat.cmd
 /backup/
+/data/v4.1/*.csv

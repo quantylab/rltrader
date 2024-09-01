@@ -29,7 +29,7 @@ class ReinforcementLearner:
                 discount_factor=0.9, num_epoches=1000,
                 balance=100000000, start_epsilon=1,
                 value_network=None, policy_network=None,
-                output_path='', reuse_models=True):
+                output_path='', reuse_models=True, gen_output=True):
         # 인자 확인
         assert min_trading_price > 0
         assert max_trading_price > 0
@@ -80,6 +80,7 @@ class ReinforcementLearner:
         self.batch_size = 0
         # 로그 등 출력 경로
         self.output_path = output_path
+        self.gen_output = gen_output
 
     def init_value_network(self, shared_network=None, activation='linear', loss='mse'):
         if self.net == 'dnn':
@@ -158,7 +159,7 @@ class ReinforcementLearner:
         self.environment.observe()
         if len(self.training_data) > self.training_data_idx + 1:
             self.training_data_idx += 1
-            self.sample = self.training_data.iloc[self.training_data_idx].tolist()
+            self.sample = self.training_data[self.training_data_idx].tolist()
             self.sample.extend(self.agent.get_states())
             return self.sample
         return None
@@ -221,12 +222,13 @@ class ReinforcementLearner:
         self.visualizer.prepare(self.environment.chart_data, info)
 
         # 가시화 결과 저장할 폴더 준비
-        self.epoch_summary_dir = os.path.join(self.output_path, f'epoch_summary_{self.stock_code}')
-        if not os.path.isdir(self.epoch_summary_dir):
-            os.makedirs(self.epoch_summary_dir)
-        else:
-            for f in os.listdir(self.epoch_summary_dir):
-                os.remove(os.path.join(self.epoch_summary_dir, f))
+        if self.gen_output:
+            self.epoch_summary_dir = os.path.join(self.output_path, f'epoch_summary_{self.stock_code}')
+            if not os.path.isdir(self.epoch_summary_dir):
+                os.makedirs(self.epoch_summary_dir)
+            else:
+                for f in os.listdir(self.epoch_summary_dir):
+                    os.remove(os.path.join(self.epoch_summary_dir, f))
 
         # 학습에 대한 정보 초기화
         max_portfolio_value = 0
@@ -308,8 +310,9 @@ class ReinforcementLearner:
                 f'Loss:{self.loss:.6f} ET:{elapsed_time_epoch:.4f}')
 
             # 에포크 관련 정보 가시화
-            if self.num_epoches == 1 or (epoch + 1) % int(self.num_epoches / 10) == 0:
-                self.visualize(epoch_str, self.num_epoches, epsilon)
+            if self.gen_output:
+                if self.num_epoches == 1 or (epoch + 1) % max(int(self.num_epoches / 10), 1) == 0:
+                    self.visualize(epoch_str, self.num_epoches, epsilon)
 
             # 학습 관련 정보 갱신
             max_portfolio_value = max(
@@ -355,16 +358,17 @@ class ReinforcementLearner:
             pred_value = None
             pred_policy = None
             if self.value_network is not None:
-                pred_value = self.value_network.predict(list(q_sample))
+                pred_value = self.value_network.predict(list(q_sample)).tolist()
             if self.policy_network is not None:
-                pred_policy = self.policy_network.predict(list(q_sample))
+                pred_policy = self.policy_network.predict(list(q_sample)).tolist()
             
             # 신경망에 의한 행동 결정
-            action, confidence, _ = self.agent.decide_action(pred_value, pred_policy, 0)
-            result.append((self.environment.observation[0], int(action), float(confidence)))
+            result.append((self.environment.observation[0], pred_value, pred_policy))
 
-        with open(os.path.join(self.output_path, f'pred_{self.stock_code}.json'), 'w') as f:
-            print(json.dumps(result), file=f)
+        if self.gen_output:
+            with open(os.path.join(self.output_path, f'pred_{self.stock_code}.json'), 'w') as f:
+                print(json.dumps(result), file=f)
+
         return result
 
 
