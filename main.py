@@ -12,15 +12,15 @@ from quantylab.rltrader import data_manager
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', choices=['train', 'test', 'update', 'predict'], default='train')
-    parser.add_argument('--ver', choices=['v1', 'v2', 'v3', 'v4'], default='v2')
+    parser.add_argument('--ver', choices=['v1', 'v2', 'v3', 'v4', 'v4.1', 'v4.2'], default='v4.1')
     parser.add_argument('--name', default=utils.get_time_str())
     parser.add_argument('--stock_code', nargs='+')
-    parser.add_argument('--rl_method', choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'])
+    parser.add_argument('--rl_method', choices=['dqn', 'pg', 'ac', 'a2c', 'a3c', 'monkey'], default='a2c')
     parser.add_argument('--net', choices=['dnn', 'lstm', 'cnn', 'monkey'], default='dnn')
     parser.add_argument('--backend', choices=['pytorch', 'tensorflow', 'plaidml'], default='pytorch')
     parser.add_argument('--start_date', default='20200101')
     parser.add_argument('--end_date', default='20201231')
-    parser.add_argument('--lr', type=float, default=0.0001)
+    parser.add_argument('--lr', type=float, default=0.001)
     parser.add_argument('--discount_factor', type=float, default=0.7)
     parser.add_argument('--balance', type=int, default=100000000)
     args = parser.parse_args()
@@ -32,7 +32,7 @@ if __name__ == '__main__':
     value_network_name = f'{args.name}_{args.rl_method}_{args.net}_value.mdl'
     policy_network_name = f'{args.name}_{args.rl_method}_{args.net}_policy.mdl'
     start_epsilon = 1 if args.mode in ['train', 'update'] else 0
-    num_epoches = 1000 if args.mode in ['train', 'update'] else 1
+    num_epoches = 100 if args.mode in ['train', 'update'] else 1
     num_steps = 5 if args.net in ['lstm', 'cnn'] else 1
 
     # Backend 설정
